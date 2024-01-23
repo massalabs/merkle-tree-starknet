@@ -1,0 +1,8 @@
+Result from external addition of 35 and 34: 69
+Hello 
+##### ffi_string
+pointer from static rust str: Hello World!
+##### get_string
+buffer from dynamic rust string: Hello from Rust!
+##### concatenate_strings
+buffer from concatenated string: Hello World!

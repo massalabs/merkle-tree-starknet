@@ -1,0 +1,168 @@
+In order to better understand how bonsai trie work, below are represented the different state of a trie while data are inserted.
+
+The different kind of nodes in the trie are represented according to:
+
+[.text-center]
+[mermaid, width=300px]
+....
+graph TD
+subgraph legend
+  EdgeNode
+  BinaryNode(BinaryNode)
+  leaf((LeafNode))
+end
+....
+
+[NOTE]
+====
+In the following, node labels e.g. `n3`, `n4` are used to identify nodes and their evolution in the graph.
+====
+
+'''
+Upon insertion of the value `0x1` at key `1`, the trie is composed of root node (of type EdgeNode) with one child (of type LeafNode).
+The key to reach the value `0x1` is encoded in the `path` contained in the root node.
+
+[.text-center]
+[mermaid]
+....
+graph TD
+subgraph step1
+  s1n1["
+    root
+    path:[0,0,0,0,0,0,0,1]
+    "]
+  s1n1-->s1l1((val: 1))
+
+end
+init-->|"insert [1] '0x1'"|step1
+....
+
+[NOTE]
+====
+`init` is virtual state symbolizing an empty trie.
+====
+
+'''
+Upon insertion of the value `0x2` at key `2`, the trie reorganize itself as shown.
+As two keys (`[0,0,0,0,0,0,1,0]` and `[0,0,0,0,0,0,0,1]`) have now to be encoded:
+
+* the `path` of the root node is truncated to the common part of the two keys `[0,0,0,0,0,0]`.
+* a binary node is inserted as the child of the root node. Each link to its children encode implicitly a part on the key, left for `0` right for `1`. Hence on the right path  `[0,0,0,0,0,0,0]` is represented and `[0,0,0,0,0,0,1]` on the left.
+* in order to encode the last bit of each key, an edge node with the appropriate `path` is inserted on both paths. As the keys are fully encoded at this step, both edge nodes have the corresponding leaf node as child.
+
+[.text-center]
+[mermaid]
+....
+graph TD
+subgraph step2
+  s2n1["
+    root
+    path:[0,0,0,0,0,0]
+  "]
+  s2n1-->s2n4
+  s2n4(n4)
+  s2n4-->|left:0|s2en3["
+    n3
+    path: [1]
+    "]
+  s2n4-->|right:1|s2en2["
+    n2
+    path: [0]
+  "]
+  s2en3-->l1((val: 1))
+  s2en2-->l2((val: 2))
+end
+
+step1-->|"insert [2] '0x2'"|step2
+....
+
+'''
+Upon insertion of the value `0x3` at key `3`, the trie reorganize again. The reorganization happens only to the subtree where new path have to be encoded. Hence the right child of the node `n4` is transformed into a binary node and the same reorganizations has explained above apply.
+
+[.text-center]
+[mermaid]
+....
+graph TD
+subgraph step3
+  n1["
+    root
+    path:[0,0,0,0,0,0]
+  "]
+  n1-->n4(n4)
+  n4-->|left:0|n3["n3
+    path: [1]"]
+  n3-->l3((val: 1))
+  n4-->|right:1|n2(n2)
+  n2-->|left:0|nl2((val: 2))
+  n2-->|right:1|nr2((val: 3))
+end
+
+step2-->|"insert [3] '0x3'"|step3
+....
+
+'''
+Upon insertion of the value `0x4` at key `4`, the trie reorganize itself as explained above.
+
+[.text-center]
+[mermaid]
+....
+graph TD
+subgraph step4
+  n1["
+    root
+    path:[0,0,0,0,0]
+  "]
+  n1-->n6(n6)
+  n6-->|left:0|n4(n4)
+  n6-->|right:1|n5["n5
+    path: [0,0]
+  "]
+
+  n4-->|left:0|n3["n3
+    path: [1]"]
+  n3-->l3((val: 1))
+  n4-->|right:1|n2(n2)
+  n2-->|left:0|nl2((val: 2))
+  n2-->|right:1|nr2((val: 3))
+  n5-->nl5((val: 4))
+end
+
+step3-->|"insert [4] '0x4'"|step4
+....
+
+'''
+The same kind of reorganizations apply upon insertion of the value `0x5` at key `5`.
+
+[.text-center]
+[mermaid]
+....
+graph TD
+subgraph step5
+  n1["
+    root
+    path:[0,0,0,0,0]
+  "]
+  n1-->n6(n6)
+  n6-->|left:0|n4(n4)
+  n6-->|right:1|n5["n5
+    path: [0]
+  "]
+
+  n4-->|left:0|n3["n3
+    path: [1]"]
+  n3-->l3((val: 1))
+  n4-->|right:1|n2(n2)
+  n2-->|left:0|nl2((val: 2))
+  n2-->|right:1|nr2((val: 3))
+  n5-->n7(n7)
+  n7-->|left:0|nl5((val: 4))
+  n7-->|right:1|nr5((val: 5))
+end
+
+step4-->|"insert [5] '0x5'"|step5
+....
+
+
+
+NOTE: upon keys removal "inverse" transformations apply.
+
