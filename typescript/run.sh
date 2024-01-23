@@ -1,7 +1,9 @@
+#!/bin/bash
+
 pushd .
 
 # build rust_ffi
-cd ../rust_ffi && cargo build && popd
+cd ../rust/rust_ffi && cargo build && popd
 
 # run our ts test
 deno run --allow-ffi --unstable deno/main.ts > result.txt
