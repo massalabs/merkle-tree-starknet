@@ -1,0 +1,2 @@
+Result from external addition of 35 and 34: 69
+Hello, world!
