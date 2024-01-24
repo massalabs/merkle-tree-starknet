@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 use bonsai_trie::{
     databases::{create_rocks_db, RocksDB, RocksDBConfig},
@@ -9,6 +9,7 @@ use bonsai_trie::{
 
 use rust_ffi::{
     get_string, TestCommand2, TestCommandList, TestCommandList2, TestId,
+    VecCommands,
 };
 // use rust_ffi::{get_test_cases};
 
@@ -16,6 +17,43 @@ use bitvec::prelude::*;
 use mp_felt::Felt252Wrapper;
 
 fn main() {
+    let leak: *mut VecCommands = rust_ffi::leak();
+    // if !leak.is_null() {
+    //     let commands = unsafe { &mut *leak };
+    //     for command in commands.commands.iter() {
+    //         unsafe {
+    //             let cstr = CStr::from_ptr(command.arg1 as *const i8);
+    //             println!(
+    //                 "command: {:?} {:?} {:?}",
+    //                 &command.command, cstr, *command.arg2
+    //             );
+    //         }
+    //     }
+    // }
+
+    rust_ffi::destroy_leak(leak);
+    println!("LEAK DESTROYED");
+
+    // ##############################################
+    let test2: TestCommandList2 = rust_ffi::get_test2();
+    let command_array = unsafe {
+        std::slice::from_raw_parts(
+            test2.test_commands as *mut TestCommand2,
+            test2.len,
+        )
+        .to_owned()
+    };
+
+    for command in command_array {
+        let cmd = command.command;
+        let arg1 = unsafe { CStr::from_ptr(command.arg1) };
+        let arg2 = unsafe { CStr::from_ptr(command.arg2) };
+        println!("command2: {:?} {:?} {:?}", cmd, arg1, arg2);
+    }
+    rust_ffi::free_test(test2);
+}
+
+fn main_old() {
     // Get the underlying key-value store.
     let db = create_rocks_db("./rocksdb").unwrap();
 
@@ -117,22 +155,27 @@ fn main() {
         }
     }
 
-    let test2: TestCommandList2 = rust_ffi::get_test2();
+    /*     let test2: TestCommandList2 = rust_ffi::get_test2();
 
-    let command_array = unsafe {
-        std::slice::from_raw_parts(
-            test2.test_commands as *mut TestCommand2, //&mut [&mut TestCommand2; 2]
-            test2.len,
-        )
-        .to_owned()
-    };
+       let command_array = unsafe {
+           std::slice::from_raw_parts(
+               test2.test_commands as *mut TestCommand2, //&mut [&mut TestCommand2; 2]
+               test2.len,
+           )
+           .to_owned()
+       };
 
-    for command in command_array {
-        let cmd = command.command;
-        let arg1 = unsafe { CString::from_raw(command.arg1 as *mut i8) };
-        let arg2 = unsafe { CString::from_raw(command.arg2 as *mut i8) };
-        println!("command2: {:?} {:?} {:?}", cmd, arg1, arg2);
-    }
+       for command in command_array {
+           let cmd = command.command;
+           let arg1 = unsafe { CString::from_raw(command.arg1 as *mut i8) };
+           let arg2 = unsafe { CString::from_raw(command.arg2 as *mut i8) };
+           println!("command2: {:?} {:?} {:?}", cmd, arg1, arg2);
+       }
+       rust_ffi::free_test(test2);
+    */
+
+    let leak: *mut VecCommands = rust_ffi::leak();
+    // rust_ffi::destroy_leak(leak);
 
     // Utiliser la méthode as_slice
     //let slice_ref: &[i32] = container.as_slice();
