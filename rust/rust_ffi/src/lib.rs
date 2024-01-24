@@ -92,6 +92,16 @@ pub struct TestCommandList2 {
 
 #[no_mangle]
 pub extern "C" fn get_test2() -> TestCommandList2 {
+    let cmd0: TestCommand2 = TestCommand2 {
+        command: TestCommand::Remove,
+        arg1: CString::new("9")
+            .expect("Failed to create CString")
+            .into_raw(),
+        arg2: CString::new("8")
+            .expect("Failed to create CString")
+            .into_raw(),
+    };
+
     let cmd1: TestCommand2 = TestCommand2 {
         command: TC::Insert,
         arg1: CString::new("1")
@@ -112,7 +122,7 @@ pub extern "C" fn get_test2() -> TestCommandList2 {
             .into_raw(),
     };
 
-    let mut vec = vec![cmd1, cmd2];
+    let mut vec = vec![cmd0, cmd1, cmd2];
     // make sure len and capacity are the same
     vec.shrink_to_fit();
     // Leak the vector to ensure it lives long enough to be used from other languages
@@ -149,11 +159,11 @@ pub extern "C" fn free_test(cmd: TestCommandList2) {
 #[repr(C)]
 #[derive(Debug, Clone)]
 pub enum TestCommand {
-    End,
-    Insert,
-    Remove,
-    Commit,
-    RootHash,
+    End = 0,
+    Insert = 1,
+    Remove = 2,
+    Commit = 3,
+    RootHash = 4,
 }
 type TC = TestCommand;
 
@@ -218,7 +228,7 @@ pub struct VecCommands {
 
 #[no_mangle]
 pub extern "C" fn leak() -> *mut VecCommands {
-    let cmd0: TestCommand2 = TestCommand2{
+    let cmd0: TestCommand2 = TestCommand2 {
         command: TestCommand::Remove,
         arg1: CString::new("9")
             .expect("Failed to create CString")
@@ -248,11 +258,14 @@ pub extern "C" fn leak() -> *mut VecCommands {
     };
 
     let vec = vec![cmd0, cmd1, cmd2];
+    println!("vec: {:p}", &vec);
+    let len = vec.len();
+    let commands = Box::into_raw(Box::new(vec)) as *mut TestCommand2;
+    println!("commands: {:p}", commands);
 
-    Box::into_raw(Box::new(VecCommands {
-        len: vec.len(),
-        commands:Box::into_raw(Box::new(vec)) as *mut TestCommand2,
-    }))
+    let ret = Box::into_raw(Box::new(VecCommands { len, commands }));
+    println!("ret: {:p}", ret);
+    ret
 }
 
 #[no_mangle]
@@ -262,7 +275,8 @@ pub extern "C" fn destroy_leak(s: *mut VecCommands) {
             let vec: Box<VecCommands> = Box::from_raw(s);
             println!("vec.commands: {:p}", vec.commands);
 
-            let commands: Box<Vec<TestCommand2>> = Box::from_raw(vec.commands as *mut Vec<TestCommand2>);
+            let commands: Box<Vec<TestCommand2>> =
+                Box::from_raw(vec.commands as *mut Vec<TestCommand2>);
 
             println!("commands: {:p}", commands);
             println!("commands: {:?}", commands);
