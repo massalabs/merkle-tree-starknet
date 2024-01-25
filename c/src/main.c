@@ -2,7 +2,8 @@
 #include <dlfcn.h>
 #include <stdio.h>
 
-int main() {
+int main()
+{
   // Call the function `add`
   int result = add(35, 34);
   printf("Result from external addition of 35 and 34: %d\n", result);
@@ -56,13 +57,13 @@ int main() {
   TestCommandList test2 = get_test2();
   printf("len: %zu\n", test2.len);
 
-  for (size_t i=0; i<test2.len; i++){
-    printf("i: %zu\n", i);
+  for (size_t i = 0; i < test2.len; i++)
+  {
+    printf("C FILE i: %zu\n", i);
     struct TestCommand cur_command = test2.test_commands[i];
-    printf("cur command id %d\n", cur_command.command);
-    printf("cur command arg1 %s\n", cur_command.arg1);
-    printf("cur command arg2 %s\n", cur_command.arg2);
-
+    printf("C FILE cur command id %d\n", cur_command.command);
+    printf("C FILE cur command arg1 %s\n", cur_command.arg1);
+    printf("C FILE cur command arg2 %s\n", cur_command.arg2);
   }
 
   free_test(test2);

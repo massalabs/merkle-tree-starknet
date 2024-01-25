@@ -4,9 +4,7 @@ pub extern "C" fn add(a: i32, b: i32) -> i32 {
 }
 
 use std::ffi::{CStr, CString};
-use std::mem::ManuallyDrop;
-use std::os::raw::{c_char, c_int};
-use std::{array, ptr};
+use std::os::raw::c_char;
 
 #[no_mangle]
 pub extern "C" fn concatenate_strings(
@@ -31,7 +29,8 @@ pub extern "C" fn concatenate_strings(
     let c_string = CString::new(result).expect("Failed to create CString");
     // println!("c_string: {:?}", c_string);
 
-    // Leak the CString to ensure it lives long enough to be used from other languages
+    // Leak the CString to ensure it lives long enough to be used from other
+    // languages
     c_string.into_raw()
 }
 
@@ -64,7 +63,8 @@ pub extern "C" fn get_string() -> *mut c_char {
     // Convert the Rust string to a CString
     let c_string = CString::new(RUST_STR).expect("Failed to create CString");
 
-    // Leak the CString to ensure it lives long enough to be used from other languages
+    // Leak the CString to ensure it lives long enough to be used from other
+    // languages
     c_string.into_raw()
 }
 
@@ -104,17 +104,13 @@ pub struct TestCommandList {
 }
 impl TestCommandList {
     pub fn new(commands: &[TestCommand]) -> Self {
-        let mut commands: Vec<TestCommand> = commands.to_vec();
+        let commands: Vec<TestCommand> = commands.to_vec();
 
-        commands.shrink_to_fit();
-        // Leak the vector to ensure it lives long enough to be used from other languages
-        let mut vec = ManuallyDrop::new(commands);
-
-        let (ptr, len, _) = (vec.as_mut_ptr(), vec.len(), vec.capacity());
+        let boxed_vec: Box<[TestCommand]> = commands.into_boxed_slice();
 
         Self {
-            test_commands: ptr,
-            len,
+            len: boxed_vec.len(),
+            test_commands: Box::into_raw(boxed_vec) as *mut TestCommand,
         }
     }
     pub fn default() -> Self {
@@ -134,7 +130,7 @@ pub extern "C" fn get_test2() -> TestCommandList {
 #[no_mangle]
 pub extern "C" fn free_test(cmd: TestCommandList) {
     if !cmd.test_commands.is_null() {
-        // Convert the raw pointer back to a Vec, 
+        // Convert the raw pointer back to a Vec,
         let vec = unsafe {
             Vec::from_raw_parts(
                 cmd.test_commands as *mut TestCommand,
@@ -198,40 +194,38 @@ pub struct VecCommands {
     pub len: usize,
 }
 
-#[no_mangle]
-pub extern "C" fn leak() -> *mut VecCommands {
-    let cmd0: TestCommand = TestCommand::new(CommandId::Remove, "9", "8");
-    let cmd1: TestCommand = TestCommand::new(CommandId::Insert, "1", "2");
-    let cmd2: TestCommand = TestCommand::new(CommandId::Commit, "4", "5");
+// #[no_mangle]
+// pub extern "C" fn leak() -> *mut VecCommands {
+//     let cmd0: TestCommand = TestCommand::new(CommandId::Remove, "9", "8");
+//     let cmd1: TestCommand = TestCommand::new(CommandId::Insert, "1", "2");
+//     let cmd2: TestCommand = TestCommand::new(CommandId::Commit, "4", "5");
 
-    let vec = vec![cmd0, cmd1, cmd2];
-    println!("vec: {:p}", &vec);
-    let len = vec.len();
-    let commands = Box::into_raw(Box::new(vec)) as *mut TestCommand;
-    println!("commands: {:p}", commands);
+//     let vec = vec![cmd0, cmd1, cmd2];
+//     let len = vec.len();
+//     let commands = Box::into_raw(Box::new(vec)) as *mut TestCommand;
+//     println!("commands: {:p}", commands);
 
-    let ret = Box::into_raw(Box::new(VecCommands { len, commands }));
-    println!("ret: {:p}", ret);
-    ret
-}
+//     VecCommands { len, commands }
+// }
 
-#[no_mangle]
-pub extern "C" fn destroy_leak(s: *mut VecCommands) {
-    unsafe {
-        if !s.is_null() {
-            let vec: Box<VecCommands> = Box::from_raw(s);
-            println!("vec.commands: {:p}", vec.commands);
+// #[no_mangle]
+// pub extern "C" fn destroy_leak(s: VecCommands) {
+//     unsafe {
+//         // if !s.is_null() {
+//         let vec: Box<VecCommands> = Box::from_raw(s);
+//         println!("vec.commands: {:p}", vec.commands);
 
-            let commands: Box<Vec<TestCommand>> =
-                Box::from_raw(vec.commands as *mut Vec<TestCommand>);
+//         let commands: Box<Vec<TestCommand>> =
+//             Box::from_raw(vec.commands as *mut Vec<TestCommand>);
 
-            println!("commands: {:p}", commands);
-            println!("commands: {:?}", commands);
+//         let vec = Vec::from_raw_parts(s.commands, s.len, s.len);
 
-            for command in commands.iter() {
-                let _arg1 = CString::from_raw(command.arg1 as *mut i8);
-                let _arg2 = CString::from_raw(command.arg2 as *mut i8);
-            }
-        }
-    }
-}
+//         println!("vec: {:?}", &vec);
+
+//         for command in commands.iter() {
+//             let _arg1 = CString::from_raw(command.arg1 as *mut i8);
+//             let _arg2 = CString::from_raw(command.arg2 as *mut i8);
+//         }
+//         // }
+//     }
+// }

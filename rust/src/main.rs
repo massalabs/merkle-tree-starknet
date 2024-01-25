@@ -1,23 +1,19 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 
 use bonsai_trie::{
     databases::{create_rocks_db, RocksDB, RocksDBConfig},
-    id::{BasicId, BasicIdBuilder},
-    BonsaiStorage, BonsaiStorageConfig, BonsaiStorageError, BonsaiTrieHash,
-    Membership, ProofNode,
+    id::BasicIdBuilder,
+    BonsaiStorage, BonsaiStorageConfig,
 };
 
-use rust_ffi::{
-    get_string, TestCommand, TestCommandList, TestCommandList, TestId,
-    VecCommands,
-};
+use rust_ffi::{TestCommand, TestCommandList};
 // use rust_ffi::{get_test_cases};
 
 use bitvec::prelude::*;
 use mp_felt::Felt252Wrapper;
 
 fn main() {
-    let leak: *mut VecCommands = rust_ffi::leak();
+    //let leak = rust_ffi::leak();
     // if !leak.is_null() {
     //     let commands = unsafe { &mut *leak };
     //     for command in commands.commands.iter() {
@@ -31,8 +27,8 @@ fn main() {
     //     }
     // }
 
-    rust_ffi::destroy_leak(leak);
-    println!("LEAK DESTROYED");
+    // rust_ffi::destroy_leak(leak);
+    //println!("LEAK DESTROYED");
 
     // ##############################################
     let test2: TestCommandList = rust_ffi::get_test2();
@@ -64,7 +60,8 @@ fn main_old() {
             .unwrap();
 
     // Create a simple incremental ID builder for commit IDs.
-    // This is not necessary, you can use any kind of strictly monotonically increasing value to tag your commits.
+    // This is not necessary, you can use any kind of strictly monotonically
+    // increasing value to tag your commits.
     let mut id_builder = BasicIdBuilder::new();
 
     // let _hello = Felt252Wrapper::from_dec_str("hello").unwrap();
@@ -82,8 +79,8 @@ fn main_old() {
     // Insert a second item `pair2`.
     // let pair2 = (
     //     vec![1, 2, 2],
-    //     Felt252Wrapper::from_hex_be("0x66342762FD54D033c195fec3ce2568b62052e")
-    //         .unwrap(),
+    //     Felt252Wrapper::from_hex_be("0x66342762FD54D033c195fec3ce2568b62052e"
+    // ) .unwrap(),
     // );
     let bitvec = BitVec::from_vec(vec![1, 2, 2]);
     bonsai_storage
@@ -108,7 +105,8 @@ fn main_old() {
     let bitvec = BitVec::from_vec(pair3.0.clone());
     bonsai_storage.insert(&bitvec, &pair3.1).unwrap();
 
-    // Commit the insertion of `pair3`. Save the commit ID to the `revert_to_id` variable.
+    // Commit the insertion of `pair3`. Save the commit ID to the `revert_to_id`
+    // variable.
     let revert_to_id = id_builder.new_id();
     bonsai_storage.commit(revert_to_id);
 
@@ -126,7 +124,8 @@ fn main_old() {
 
     assert_eq!(val.unwrap(), pair1.1);
 
-    // Revert the collection state back to the commit tagged by the `revert_to_id` variable.
+    // Revert the collection state back to the commit tagged by the
+    // `revert_to_id` variable.
     bonsai_storage.revert_to(revert_to_id).unwrap();
 
     // Print the root hash and item `pair3`.
@@ -174,14 +173,15 @@ fn main_old() {
        rust_ffi::free_test(test2);
     */
 
-    let leak: *mut VecCommands = rust_ffi::leak();
+    // let leak: *mut VecCommands = rust_ffi::leak();
     // rust_ffi::destroy_leak(leak);
 
     // Utiliser la méthode as_slice
     //let slice_ref: &[i32] = container.as_slice();
 
-    // // Launch two threads that will simultaneously take transactional states to the commit identified by `id1`,
-    // // asserting in both of them that the item `pair1` is present and has the right value.
+    // // Launch two threads that will simultaneously take transactional states
+    // to the commit identified by `id1`, // asserting in both of them that
+    // the item `pair1` is present and has the right value.
     // std::thread::scope(|s| {
     //     s.spawn(|| {
     //         let bonsai_at_txn = bonsai_storage
@@ -189,8 +189,8 @@ fn main_old() {
     //             .unwrap()
     //             .unwrap();
     //         let bitvec = BitVec::from_vec(pair1.0.clone());
-    //         assert_eq!(bonsai_at_txn.get(&bitvec).unwrap().unwrap(), pair1.1);
-    //     });
+    //         assert_eq!(bonsai_at_txn.get(&bitvec).unwrap().unwrap(),
+    // pair1.1);     });
 
     //     s.spawn(|| {
     //         let bonsai_at_txn = bonsai_storage
@@ -198,8 +198,8 @@ fn main_old() {
     //             .unwrap()
     //             .unwrap();
     //         let bitvec = BitVec::from_vec(pair1.0.clone());
-    //         assert_eq!(bonsai_at_txn.get(&bitvec).unwrap().unwrap(), pair1.1);
-    //     });
+    //         assert_eq!(bonsai_at_txn.get(&bitvec).unwrap().unwrap(),
+    // pair1.1);     });
     // });
 
     // // Read item `pair1`.
@@ -210,8 +210,8 @@ fn main_old() {
     // // Insert a new item and commit.
     // let pair4 = (
     //     vec![1, 2, 3],
-    //     Felt252Wrapper::from_hex_be("0x66342762FDD54D033c195fec3ce2568b62052e").unwrap(),
-    // );
+    //     Felt252Wrapper::from_hex_be("
+    // 0x66342762FDD54D033c195fec3ce2568b62052e").unwrap(), );
     // bonsai_storage
     //     .insert(&BitVec::from_vec(pair4.0.clone()), &pair4.1)
     //     .unwrap();
