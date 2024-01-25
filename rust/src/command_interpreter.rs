@@ -4,7 +4,7 @@ use bitvec::vec::BitVec;
 use bonsai_trie::{
     databases::RocksDB,
     id::{BasicId, BasicIdBuilder},
-    BonsaiStorage,
+    BonsaiStorage, BonsaiStorageError,
 };
 use rust_ffi::{CommandId, TestCommand};
 use starknet_types_core::{felt::Felt, hash::Pedersen};
@@ -15,7 +15,7 @@ pub fn run_command<'a>(
     command: &TestCommand,
     id_builder: &mut BasicIdBuilder,
     bonsai_storage: &mut BonsaiStorage<BasicId, RocksDB<'a, BasicId>, Pedersen>,
-) {
+) -> Result<Option<String>, BonsaiStorageError> {
     match command.command {
         CommandId::Insert => {
             let key =
@@ -24,23 +24,23 @@ pub fn run_command<'a>(
                 unsafe { CStr::from_ptr(command.arg2) }.to_str().unwrap();
             bonsai_storage
                 .insert(&BitVec::from_vec(key), &Felt::from_hex(value).unwrap())
-                .unwrap();
+                .map(|_| None)
         }
         CommandId::Remove => {
             let key =
                 unsafe { CStr::from_ptr(command.arg1) }.to_bytes().to_vec();
-            bonsai_storage.remove(&BitVec::from_vec(key)).unwrap();
+            bonsai_storage.remove(&BitVec::from_vec(key)).map(|_| None)
         }
         CommandId::Commit => {
             let id = id_builder.new_id();
-            bonsai_storage.commit(id).unwrap();
-            // shared_tree.bonsai_storage.commit(id_builder.new_id());
+            bonsai_storage.commit(id).map(|_| None)
         }
         CommandId::End => {
             unimplemented!("End")
         }
         CommandId::RootHash => {
-            unimplemented!("RootHash")
+            let hash = bonsai_storage.root_hash().unwrap();
+            Ok(Some(hash.to_hex_string()))
         }
     }
 }

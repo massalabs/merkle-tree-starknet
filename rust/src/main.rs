@@ -42,6 +42,14 @@ fn main() {
     let id = id_builder.new_id();
     bonsai_storage.commit(id).unwrap();
 
+    // remove
+    bonsai_storage
+        .remove(&BitVec::from_vec(vec![1, 2, 1]))
+        .unwrap();
+
+    // commit
+    bonsai_storage.commit(id_builder.new_id()).unwrap();
+
     // *****  Second database
 
     let db2 = create_rocks_db("./rocksdb2").unwrap();
@@ -61,18 +69,19 @@ fn main() {
     };
 
     for command in commands {
-        command_interpreter::run_command(
+        let _ = command_interpreter::run_command(
             &command,
             &mut id_builder,
             &mut bonsai_storage2,
-        );
+        )
+        .unwrap();
     }
     rust_ffi::free_test(test1);
 
     assert_eq!(
         bonsai_storage.root_hash().unwrap(),
-        bonsai_storage.root_hash().unwrap()
+        bonsai_storage2.root_hash().unwrap()
     );
     println!("root: {:#?}", bonsai_storage.root_hash());
-    println!("root: {:#?}", bonsai_storage.root_hash());
+    println!("root: {:#?}", bonsai_storage2.root_hash());
 }
