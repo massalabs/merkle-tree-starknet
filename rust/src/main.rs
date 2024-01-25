@@ -8,7 +8,7 @@ use bonsai_trie::{
 };
 
 use rust_ffi::{
-    get_string, TestCommand2, TestCommandList, TestCommandList2, TestId,
+    get_string, TestCommand, TestCommandList, TestCommandList, TestId,
     VecCommands,
 };
 // use rust_ffi::{get_test_cases};
@@ -35,10 +35,10 @@ fn main() {
     println!("LEAK DESTROYED");
 
     // ##############################################
-    let test2: TestCommandList2 = rust_ffi::get_test2();
+    let test2: TestCommandList = rust_ffi::get_test2();
     let command_array = unsafe {
         std::slice::from_raw_parts(
-            test2.test_commands as *mut TestCommand2,
+            test2.test_commands as *mut TestCommand,
             test2.len,
         )
         .to_owned()
@@ -155,11 +155,11 @@ fn main_old() {
         }
     }
 
-    /*     let test2: TestCommandList2 = rust_ffi::get_test2();
+    /*     let test2: TestCommandList = rust_ffi::get_test2();
 
        let command_array = unsafe {
            std::slice::from_raw_parts(
-               test2.test_commands as *mut TestCommand2, //&mut [&mut TestCommand2; 2]
+               test2.test_commands as *mut TestCommand, //&mut [&mut TestCommand; 2]
                test2.len,
            )
            .to_owned()

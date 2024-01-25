@@ -77,72 +77,67 @@ extern "C" fn ffi_string() -> *const u8 {
 
 #[repr(C)]
 #[derive(Debug, Clone)]
-pub struct TestCommand2 {
-    pub command: TestCommand,
+pub struct TestCommand {
+    pub command: CommandId,
     pub arg1: *const c_char,
     pub arg2: *const c_char,
+}
+impl TestCommand {
+    pub fn new(command: CommandId, arg1: &str, arg2: &str) -> Self {
+        Self {
+            command,
+            arg1: CString::new(arg1)
+                .expect("Failed to create CString")
+                .into_raw(),
+            arg2: CString::new(arg2)
+                .expect("Failed to create CString")
+                .into_raw(),
+        }
+    }
 }
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct TestCommandList2 {
-    pub test_commands: *const TestCommand2,
+pub struct TestCommandList {
+    pub test_commands: *const TestCommand,
     pub len: usize,
 }
+impl TestCommandList {
+    pub fn new(commands: &[TestCommand]) -> Self {
+        let mut commands: Vec<TestCommand> = commands.to_vec();
 
-#[no_mangle]
-pub extern "C" fn get_test2() -> TestCommandList2 {
-    let cmd0: TestCommand2 = TestCommand2 {
-        command: TestCommand::Remove,
-        arg1: CString::new("9")
-            .expect("Failed to create CString")
-            .into_raw(),
-        arg2: CString::new("8")
-            .expect("Failed to create CString")
-            .into_raw(),
-    };
+        commands.shrink_to_fit();
+        // Leak the vector to ensure it lives long enough to be used from other languages
+        let mut vec = ManuallyDrop::new(commands);
 
-    let cmd1: TestCommand2 = TestCommand2 {
-        command: TC::Insert,
-        arg1: CString::new("1")
-            .expect("Failed to create CString")
-            .into_raw(),
-        arg2: CString::new("2")
-            .expect("Failed to create CString")
-            .into_raw(),
-    };
+        let (ptr, len, _) = (vec.as_mut_ptr(), vec.len(), vec.capacity());
 
-    let cmd2: TestCommand2 = TestCommand2 {
-        command: TestCommand::Commit,
-        arg1: CString::new("4")
-            .expect("Failed to create CString")
-            .into_raw(),
-        arg2: CString::new("5")
-            .expect("Failed to create CString")
-            .into_raw(),
-    };
-
-    let mut vec = vec![cmd0, cmd1, cmd2];
-    // make sure len and capacity are the same
-    vec.shrink_to_fit();
-    // Leak the vector to ensure it lives long enough to be used from other languages
-    let mut vec = ManuallyDrop::new(vec);
-
-    let (ptr, len, _) = (vec.as_mut_ptr(), vec.len(), vec.capacity());
-
-    TestCommandList2 {
-        test_commands: ptr,
-        len,
+        Self {
+            test_commands: ptr,
+            len,
+        }
+    }
+    pub fn default() -> Self {
+        Self::new(&[])
     }
 }
 
 #[no_mangle]
-pub extern "C" fn free_test(cmd: TestCommandList2) {
+pub extern "C" fn get_test2() -> TestCommandList {
+    let cmd0: TestCommand = TestCommand::new(TC::Remove, "9", "8");
+    let cmd1: TestCommand = TestCommand::new(TC::Insert, "1", "2");
+    let cmd2: TestCommand = TestCommand::new(TC::Commit, "4", "5");
+
+    TestCommandList::new(&[cmd0, cmd1, cmd2])
+}
+
+#[no_mangle]
+pub extern "C" fn free_test(cmd: TestCommandList) {
     if !cmd.test_commands.is_null() {
-        // Convert the raw pointer back to a Vec
+        // Convert the raw pointer back to a Vec, 
         let vec = unsafe {
             Vec::from_raw_parts(
-                cmd.test_commands as *mut TestCommand2,
+                cmd.test_commands as *mut TestCommand,
                 cmd.len,
                 cmd.len,
             )
@@ -158,22 +153,14 @@ pub extern "C" fn free_test(cmd: TestCommandList2) {
 
 #[repr(C)]
 #[derive(Debug, Clone)]
-pub enum TestCommand {
+pub enum CommandId {
     End = 0,
     Insert = 1,
     Remove = 2,
     Commit = 3,
     RootHash = 4,
 }
-type TC = TestCommand;
-
-// Test scenarios
-const TEST1: [TestCommand; 4] = [TC::Insert, TC::Commit, TC::Remove, TC::End];
-const TEST2: [TestCommand; 5] =
-    [TC::Insert, TC::Commit, TC::Remove, TC::RootHash, TC::End];
-const TEST3: [TestCommand; 3] = [TC::Insert, TC::Commit, TC::End];
-
-const TEST_CASES: [&[TestCommand]; 3] = [&TEST1, &TEST2, &TEST3];
+type TC = CommandId;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -195,72 +182,32 @@ pub const extern "C" fn get_test_cases() -> TestCases {
     }
 }
 
-#[repr(C)]
-pub struct TestCommandList {
-    pub test_commands: *const TestCommand,
-    pub len: usize,
-}
-
 #[no_mangle]
 pub extern "C" fn get_test(id: TestId) -> TestCommandList {
     match id {
-        TestId::Test1 => TestCommandList {
-            test_commands: TEST1.as_ptr(),
-            len: TEST1.len(),
-        },
-        TestId::Test2 => TestCommandList {
-            test_commands: TEST2.as_ptr(),
-            len: TEST2.len(),
-        },
-        TestId::Test3 => TestCommandList {
-            test_commands: TEST3.as_ptr(),
-            len: TEST3.len(),
-        },
+        TestId::Test1 => TestCommandList::default(),
+        TestId::Test2 => get_test2(),
+        TestId::Test3 => TestCommandList::default(),
     }
 }
 
 #[repr(C)]
 #[derive(Debug)]
 pub struct VecCommands {
-    pub commands: *mut TestCommand2,
+    pub commands: *mut TestCommand,
     pub len: usize,
 }
 
 #[no_mangle]
 pub extern "C" fn leak() -> *mut VecCommands {
-    let cmd0: TestCommand2 = TestCommand2 {
-        command: TestCommand::Remove,
-        arg1: CString::new("9")
-            .expect("Failed to create CString")
-            .into_raw(),
-        arg2: CString::new("8")
-            .expect("Failed to create CString")
-            .into_raw(),
-    };
-    let cmd1: TestCommand2 = TestCommand2 {
-        command: TestCommand::Insert,
-        arg1: CString::new("1")
-            .expect("Failed to create CString")
-            .into_raw(),
-        arg2: CString::new("2")
-            .expect("Failed to create CString")
-            .into_raw(),
-    };
-
-    let cmd2: TestCommand2 = TestCommand2 {
-        command: TestCommand::Commit,
-        arg1: CString::new("4")
-            .expect("Failed to create CString")
-            .into_raw(),
-        arg2: CString::new("5")
-            .expect("Failed to create CString")
-            .into_raw(),
-    };
+    let cmd0: TestCommand = TestCommand::new(CommandId::Remove, "9", "8");
+    let cmd1: TestCommand = TestCommand::new(CommandId::Insert, "1", "2");
+    let cmd2: TestCommand = TestCommand::new(CommandId::Commit, "4", "5");
 
     let vec = vec![cmd0, cmd1, cmd2];
     println!("vec: {:p}", &vec);
     let len = vec.len();
-    let commands = Box::into_raw(Box::new(vec)) as *mut TestCommand2;
+    let commands = Box::into_raw(Box::new(vec)) as *mut TestCommand;
     println!("commands: {:p}", commands);
 
     let ret = Box::into_raw(Box::new(VecCommands { len, commands }));
@@ -275,8 +222,8 @@ pub extern "C" fn destroy_leak(s: *mut VecCommands) {
             let vec: Box<VecCommands> = Box::from_raw(s);
             println!("vec.commands: {:p}", vec.commands);
 
-            let commands: Box<Vec<TestCommand2>> =
-                Box::from_raw(vec.commands as *mut Vec<TestCommand2>);
+            let commands: Box<Vec<TestCommand>> =
+                Box::from_raw(vec.commands as *mut Vec<TestCommand>);
 
             println!("commands: {:p}", commands);
             println!("commands: {:?}", commands);
@@ -288,66 +235,3 @@ pub extern "C" fn destroy_leak(s: *mut VecCommands) {
         }
     }
 }
-
-/* type TestId = u64;
-#[repr(C)]
-struct TestCases<const COUNT: usize> {
-    test_cases: [TestId; COUNT],
-}
- */
-/* #[repr(C)]
-struct TestCase<const COUNT: usize> {
-    test_steps: [&'static str; COUNT],
-    test_id: TestId,
-}
-
-#[no_mangle]
-const extern "C" fn get_test_cases() -> TestCases<5> {
-    let test_cases: [u64; 5] = [1, 2, 3, 4, 5];
-    TestCases { test_cases }
-}
- */
-/* #[no_mangle]
-extern "C" fn get_test(id: TestId) -> TestCase<3> {
-    // let test_steps = ["step1", "step2", "step3"];
-    // let mut t = Vec::with_capacity(c);
-    // t.push("step1");
-    // t.push("step2");
-    // t.push("step3");
-    // // let test_steps = t.as_slice();
-
-    let my_str_array: Vec<&str> =
-        ["step1", "step2", "step3"].iter().map(|s| *s).collect();
-
-    let test_steps: [&str; 3] = my_str_array.try_into().unwrap_or_else(|v| {
-        panic!("Expected an array of length {}, but got {:?}", 3, v)
-    });
-
-    TestCase {
-        test_steps,
-        test_id: id,
-    }
-}
- */
-/* pub mod TestModule {
-
-    trait SliceContainer {
-        type Item;
-
-        extern "C" fn as_slice(&self) -> &[Self::Item];
-    }
-
-    pub struct GenericSliceContainer<T: 'static> {
-        pub data: Vec<T>,
-    }
-
-    impl<T: 'static> SliceContainer for GenericSliceContainer<T> {
-        type Item = T;
-
-        #[no_mangle]
-        extern "C" fn as_slice(&self) -> &[T] {
-            &self.data
-        }
-    }
-}
- */

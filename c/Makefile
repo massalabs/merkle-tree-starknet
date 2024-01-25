@@ -21,11 +21,13 @@ $(TARGET): src/*.c
 clean:
 	rm -f $(TARGET)
 
-
-.phony: librs all run
+.phony: librs all run clean
 
 librs:
 	cd ../rust/rust_ffi && cargo build
 
 run: all
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):../rust/rust_ffi/target/debug/" ./$(TARGET)
+
+valgrind: all
+	valgrind --leak-check=full ./$(TARGET)
