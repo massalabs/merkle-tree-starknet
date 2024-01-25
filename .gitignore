@@ -1,2 +1,9 @@
+rust/rust_ffi/target
 rust_ffi/target
+rust/target
 zig/zig-cache
+c/main.dSYM
+result.txt
+main
+.idea
+rust/rocksdb*

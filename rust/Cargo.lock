@@ -2227,6 +2227,7 @@ dependencies = [
  "bonsai-trie",
  "mp-felt",
  "rust_ffi",
+ "starknet-types-core",
 ]
 
 [[package]]
