@@ -1,3 +1,6 @@
+// #[macro_use]
+extern crate static_assertions;
+
 #[no_mangle]
 pub extern "C" fn add(a: i32, b: i32) -> i32 {
     a + b
@@ -83,7 +86,8 @@ pub struct TestCommand {
     pub arg2: *const c_char,
 }
 impl TestCommand {
-    pub fn new(command: CommandId, arg1: &str, arg2: &str) -> Self {
+    pub fn new(command: CommandId, a: &[u8], arg2: &str) -> Self {
+        let arg1 = unsafe { std::str::from_utf8_unchecked(a) };
         Self {
             command,
             arg1: CString::new(arg1)
@@ -119,10 +123,29 @@ impl TestCommandList {
 }
 
 #[no_mangle]
+pub extern "C" fn get_test1() -> TestCommandList {
+    let key1 = &[1, 2, 1];
+    TestCommandList::new(&[
+        TestCommand::new(
+            TC::Insert,
+            key1,
+            "0x66342762FDD54D033c195fec3ce2568b62052e",
+        ),
+        TestCommand::new(
+            TC::Insert,
+            &[1, 2, 2],
+            "0x66342762FD54D033c195fec3ce2568b62052e",
+        ),
+        TestCommand::new(TC::Commit, &[], ""),
+        TestCommand::new(TC::Remove, key1, ""),
+        TestCommand::new(TC::Commit, &[], ""),
+    ])
+}
+#[no_mangle]
 pub extern "C" fn get_test2() -> TestCommandList {
-    let cmd0: TestCommand = TestCommand::new(TC::Remove, "9", "8");
-    let cmd1: TestCommand = TestCommand::new(TC::Insert, "1", "2");
-    let cmd2: TestCommand = TestCommand::new(TC::Commit, "4", "5");
+    let cmd0: TestCommand = TestCommand::new(TC::Remove, &[1, 2, 1], "8");
+    let cmd1: TestCommand = TestCommand::new(TC::Insert, &[1, 2, 1], "2");
+    let cmd2: TestCommand = TestCommand::new(TC::Commit, &[1, 2, 1], "5");
 
     TestCommandList::new(&[cmd0, cmd1, cmd2])
 }
@@ -164,11 +187,12 @@ pub enum TestId {
     Test1,
     Test2,
     Test3,
+    Count,
 }
 
 #[repr(C)]
 pub struct TestCases {
-    pub test_cases: [TestId; 3],
+    pub test_cases: [TestId; TestId::Count as usize],
 }
 
 #[no_mangle]
@@ -181,18 +205,19 @@ pub const extern "C" fn get_test_cases() -> TestCases {
 #[no_mangle]
 pub extern "C" fn get_test(id: TestId) -> TestCommandList {
     match id {
-        TestId::Test1 => TestCommandList::default(),
+        TestId::Test1 => get_test1(),
         TestId::Test2 => get_test2(),
         TestId::Test3 => TestCommandList::default(),
+        TestId::Count => TestCommandList::default(),
     }
 }
 
-#[repr(C)]
-#[derive(Debug)]
-pub struct VecCommands {
-    pub commands: *mut TestCommand,
-    pub len: usize,
-}
+// #[repr(C)]
+// #[derive(Debug)]
+// pub struct VecCommands {
+//     pub commands: *mut TestCommand,
+//     pub len: usize,
+// }
 
 // #[no_mangle]
 // pub extern "C" fn leak() -> *mut VecCommands {
