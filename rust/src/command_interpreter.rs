@@ -16,12 +16,14 @@ pub fn run_command<'a>(
     id_builder: &mut BasicIdBuilder,
     bonsai_storage: &mut BonsaiStorage<BasicId, RocksDB<'a, BasicId>, Pedersen>,
 ) -> Result<Option<String>, BonsaiStorageError> {
-    match command.command {
+    match command.id {
         CommandId::Insert => {
             let key =
                 unsafe { CStr::from_ptr(command.arg1) }.to_bytes().to_vec();
             let value =
                 unsafe { CStr::from_ptr(command.arg2) }.to_str().unwrap();
+
+            println!("insert {:?} {}", key, value);
             bonsai_storage
                 .insert(&BitVec::from_vec(key), &Felt::from_hex(value).unwrap())
                 .map(|_| None)
@@ -29,10 +31,12 @@ pub fn run_command<'a>(
         CommandId::Remove => {
             let key =
                 unsafe { CStr::from_ptr(command.arg1) }.to_bytes().to_vec();
+            println!("remove {:?}", key);
             bonsai_storage.remove(&BitVec::from_vec(key)).map(|_| None)
         }
         CommandId::Commit => {
             let id = id_builder.new_id();
+            println!("commint {:?}", id);
             bonsai_storage.commit(id).map(|_| None)
         }
         CommandId::End => {

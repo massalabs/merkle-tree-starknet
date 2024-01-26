@@ -84,16 +84,16 @@ extern "C" fn ffi_string() -> *const u8 {
 #[repr(C)]
 #[derive(Debug, Clone)]
 pub struct Command {
-    pub command: CommandId,
+    pub id: CommandId,
     pub arg1: *const c_char,
     pub arg2: *const c_char,
 }
 
 impl Command {
-    pub fn new(command: CommandId, a: &[u8], arg2: &str) -> Self {
-        let arg1 = unsafe { std::str::from_utf8_unchecked(a) };
+    pub fn new(id: CommandId, arg1: &str, arg2: &str) -> Self {
+        // let arg1 = unsafe { std::str::from_utf8_unchecked(a) };
         Self {
-            command,
+            id,
             arg1: CString::new(arg1)
                 .expect("Failed to create CString")
                 .into_raw(),
@@ -121,6 +121,7 @@ impl CommandList {
             test_commands: Box::into_raw(boxed_vec) as *mut Command,
         }
     }
+
     pub fn default() -> Self {
         Self::new(&[])
     }
@@ -128,28 +129,16 @@ impl CommandList {
 
 #[no_mangle]
 pub extern "C" fn get_test1() -> CommandList {
-    let key1 = &[1, 2, 1];
-    CommandList::new(&[
-        Command::new(
-            TC::Insert,
-            key1,
-            "0x66342762FDD54D033c195fec3ce2568b62052e",
-        ),
-        Command::new(
-            TC::Insert,
-            &[1, 2, 2],
-            "0x66342762FD54D033c195fec3ce2568b62052e",
-        ),
-        Command::new(TC::Commit, &[], ""),
-        Command::new(TC::Remove, key1, ""),
-        Command::new(TC::Commit, &[], ""),
-    ])
+    let cmd_list = read_yaml_file("./scenario/1.yml").unwrap();
+
+    dbg!(&cmd_list);
+    cmd_list
 }
 #[no_mangle]
 pub extern "C" fn get_test2() -> CommandList {
-    let cmd0: Command = Command::new(TC::Remove, &[1, 2, 1], "8");
-    let cmd1: Command = Command::new(TC::Insert, &[1, 2, 1], "2");
-    let cmd2: Command = Command::new(TC::Commit, &[1, 2, 1], "5");
+    let cmd0: Command = Command::new(TC::Remove, "0x490x500x51", "8");
+    let cmd1: Command = Command::new(TC::Insert, "0x490x500x49", "2");
+    let cmd2: Command = Command::new(TC::Commit, "0x490x500x49", "5");
 
     CommandList::new(&[cmd0, cmd1, cmd2])
 }
@@ -228,18 +217,23 @@ pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
         if let Some(commands) = doc["commands"].as_vec() {
             for command in commands {
                 if let Some(tc_type) = command["action"].as_str() {
+                    let b;
+
                     let arg1 = if let Some(key) = command["arg1"].as_vec() {
-                        key.into_iter()
+                        b = key
+                            .into_iter()
                             .map(|x| x.as_i64().unwrap() as u8)
-                            .collect::<Vec<_>>()
+                            .collect::<Vec<_>>();
+                        // let c = b.clone();
+
+                        unsafe { std::str::from_utf8_unchecked(&b) }
                     } else {
-                        vec![]
+                        command["arg1"].as_str().unwrap_or_else(|| "")
                     };
 
                     let arg2 = command["arg2"].as_str().unwrap_or_else(|| "");
 
-                    let command =
-                        Command::new(TC::from(tc_type), arg1.as_slice(), arg2);
+                    let command = Command::new(TC::from(tc_type), arg1, arg2);
 
                     vec.push(command);
                 }

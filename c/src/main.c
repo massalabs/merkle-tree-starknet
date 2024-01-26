@@ -61,7 +61,7 @@ int main()
   {
     printf("C FILE i: %zu\n", i);
     struct Command cur_command = test2.test_commands[i];
-    printf("C FILE cur command id %d\n", cur_command.command);
+    printf("C FILE cur command id %d\n", cur_command.id);
     printf("C FILE cur command arg1 %s\n", cur_command.arg1);
     printf("C FILE cur command arg2 %s\n", cur_command.arg2);
   }

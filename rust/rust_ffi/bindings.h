@@ -21,7 +21,7 @@ typedef enum TestId {
 typedef struct TestCases TestCases;
 
 typedef struct Command {
-  enum CommandId command;
+  enum CommandId id;
   const char *arg1;
   const char *arg2;
 } Command;
