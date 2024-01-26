@@ -8,7 +8,7 @@ use command_interpreter::run_test;
 // use rust_ffi::{get_test_cases};
 
 use bitvec::prelude::*;
-use starknet_types_core::{felt::Felt, hash::Pedersen};
+use starknet_types_core::hash::Pedersen;
 
 // use crate::shared_tree::SharedTree;
 

@@ -4,6 +4,13 @@ commands:
     arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
   - action: commit
     arg1: "1"
+  - action: get
+    arg1: [1, 2, 1]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
+  - action: contains
+    arg1: [1, 2, 1]
+    arg2: "true"
+
   - action: check_root_hash
     arg1: "0x1a27757437437e6405a77e3b6fa4ac6fd9051d718bf3793e1e96177827ba4ad"
   - action: insert
@@ -17,9 +24,20 @@ commands:
     arg1: "1"
   - action: check_root_hash
     arg1: "0x1a27757437437e6405a77e3b6fa4ac6fd9051d718bf3793e1e96177827ba4ad"
-  # - action: remove
+  - action: contains
+    arg1: [1, 2, 1]
+    arg2: "false" # should be true
+# should be present but fails
+  # - action: get
   #   arg1: [1, 2, 1]
-  # - action: commit
-  #   arg1: "2"
-  # - action: check_root_hash
-  #   arg1: "0x1b3743ac060a8a333a908edc22007987c596aa0de812965677cfbab82d4c2f3"
+  #   arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
+
+  - action: insert
+    arg1: [1, 2, 2]
+    arg2: "0x66342762FD54D033c195fec3ce2568b62052e"
+  - action: commit
+    arg1: "3"
+
+  - action: get_proof
+    arg1: [1, 2, 2]
+    arg2: "0x1f939088618293ab18272e09ec75a6897dff4f9fd1f92a134fda90e0ea360f4,0x234f4beb80b78fe4cefb36fba98af6a599ff22fbd84711cb279418ab3f56d47,0x1ae097f46a0a62f49d974b376b033af4fc704918a69a8004ed9d2a7bc196a5d"

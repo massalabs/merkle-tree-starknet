@@ -170,7 +170,11 @@ pub enum CommandId {
     Remove,
     Commit,
     CheckRootHash,
-    RevertTo
+    RevertTo,
+    Get,
+    Contains,
+    GetProof,
+    VerifyProof,
 }
 type TC = CommandId;
 
@@ -227,7 +231,6 @@ pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
                             .into_iter()
                             .map(|x| x.as_i64().unwrap() as u8)
                             .collect::<Vec<_>>();
-                        // let c = b.clone();
 
                         unsafe { std::str::from_utf8_unchecked(&b) }
                     } else {
@@ -257,7 +260,11 @@ impl From<&str> for TC {
             "commit" => TC::Commit,
             "check_root_hash" => TC::CheckRootHash,
             "revert_to" => TC::RevertTo,
-            _ => panic!("Unknown command type ! Allowed type : insert, remove, commit, check_root_hash, revert_to")
+            "contains" => TC::Contains,
+            "get" => TC::Get,
+            "get_proof" => TC::GetProof,
+            "verify_proof" => TC::VerifyProof,
+            _ => panic!("Unknown command type")
         }
     }
 }
