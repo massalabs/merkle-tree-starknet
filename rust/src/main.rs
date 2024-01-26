@@ -4,7 +4,7 @@ use bonsai_trie::{
     BonsaiStorage, BonsaiStorageConfig,
 };
 
-use rust_ffi::TestCommand;
+use rust_ffi::Command;
 // use rust_ffi::{get_test_cases};
 
 use bitvec::prelude::*;
@@ -66,7 +66,7 @@ fn main() {
     let test1 = rust_ffi::get_test1();
     let commands = unsafe {
         std::slice::from_raw_parts(
-            test1.test_commands as *mut TestCommand,
+            test1.test_commands as *mut Command,
             test1.len,
         )
         .to_owned()

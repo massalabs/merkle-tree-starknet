@@ -20,14 +20,14 @@ typedef enum TestId {
 
 typedef struct TestCases TestCases;
 
-typedef struct TestCommand {
+typedef struct Command {
   enum CommandId command;
   const char *arg1;
   const char *arg2;
-} TestCommand;
+} Command;
 
 typedef struct CommandList {
-  const struct TestCommand *test_commands;
+  const struct Command *test_commands;
   uintptr_t len;
 } CommandList;
 

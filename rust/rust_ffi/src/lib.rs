@@ -83,13 +83,13 @@ extern "C" fn ffi_string() -> *const u8 {
 
 #[repr(C)]
 #[derive(Debug, Clone)]
-pub struct TestCommand {
+pub struct Command {
     pub command: CommandId,
     pub arg1: *const c_char,
     pub arg2: *const c_char,
 }
 
-impl TestCommand {
+impl Command {
     pub fn new(command: CommandId, a: &[u8], arg2: &str) -> Self {
         let arg1 = unsafe { std::str::from_utf8_unchecked(a) };
         Self {
@@ -107,18 +107,18 @@ impl TestCommand {
 #[repr(C)]
 #[derive(Debug)]
 pub struct CommandList {
-    pub test_commands: *const TestCommand,
+    pub test_commands: *const Command,
     pub len: usize,
 }
 impl CommandList {
-    pub fn new(commands: &[TestCommand]) -> Self {
-        let commands: Vec<TestCommand> = commands.to_vec();
+    pub fn new(commands: &[Command]) -> Self {
+        let commands: Vec<Command> = commands.to_vec();
 
-        let boxed_vec: Box<[TestCommand]> = commands.into_boxed_slice();
+        let boxed_vec: Box<[Command]> = commands.into_boxed_slice();
 
         Self {
             len: boxed_vec.len(),
-            test_commands: Box::into_raw(boxed_vec) as *mut TestCommand,
+            test_commands: Box::into_raw(boxed_vec) as *mut Command,
         }
     }
     pub fn default() -> Self {
@@ -130,26 +130,26 @@ impl CommandList {
 pub extern "C" fn get_test1() -> CommandList {
     let key1 = &[1, 2, 1];
     CommandList::new(&[
-        TestCommand::new(
+        Command::new(
             TC::Insert,
             key1,
             "0x66342762FDD54D033c195fec3ce2568b62052e",
         ),
-        TestCommand::new(
+        Command::new(
             TC::Insert,
             &[1, 2, 2],
             "0x66342762FD54D033c195fec3ce2568b62052e",
         ),
-        TestCommand::new(TC::Commit, &[], ""),
-        TestCommand::new(TC::Remove, key1, ""),
-        TestCommand::new(TC::Commit, &[], ""),
+        Command::new(TC::Commit, &[], ""),
+        Command::new(TC::Remove, key1, ""),
+        Command::new(TC::Commit, &[], ""),
     ])
 }
 #[no_mangle]
 pub extern "C" fn get_test2() -> CommandList {
-    let cmd0: TestCommand = TestCommand::new(TC::Remove, &[1, 2, 1], "8");
-    let cmd1: TestCommand = TestCommand::new(TC::Insert, &[1, 2, 1], "2");
-    let cmd2: TestCommand = TestCommand::new(TC::Commit, &[1, 2, 1], "5");
+    let cmd0: Command = Command::new(TC::Remove, &[1, 2, 1], "8");
+    let cmd1: Command = Command::new(TC::Insert, &[1, 2, 1], "2");
+    let cmd2: Command = Command::new(TC::Commit, &[1, 2, 1], "5");
 
     CommandList::new(&[cmd0, cmd1, cmd2])
 }
@@ -160,7 +160,7 @@ pub extern "C" fn free_test(cmd: CommandList) {
         // Convert the raw pointer back to a Vec,
         let vec = unsafe {
             Vec::from_raw_parts(
-                cmd.test_commands as *mut TestCommand,
+                cmd.test_commands as *mut Command,
                 cmd.len,
                 cmd.len,
             )
@@ -238,11 +238,8 @@ pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
 
                     let arg2 = command["arg2"].as_str().unwrap_or_else(|| "");
 
-                    let command = TestCommand::new(
-                        TC::from(tc_type),
-                        arg1.as_slice(),
-                        arg2,
-                    );
+                    let command =
+                        Command::new(TC::from(tc_type), arg1.as_slice(), arg2);
 
                     vec.push(command);
                 }
@@ -271,19 +268,19 @@ impl From<&str> for TC {
 // #[repr(C)]
 // #[derive(Debug)]
 // pub struct VecCommands {
-//     pub commands: *mut TestCommand,
+//     pub commands: *mut Command,
 //     pub len: usize,
 // }
 
 // #[no_mangle]
 // pub extern "C" fn leak() -> *mut VecCommands {
-//     let cmd0: TestCommand = TestCommand::new(CommandId::Remove, "9", "8");
-//     let cmd1: TestCommand = TestCommand::new(CommandId::Insert, "1", "2");
-//     let cmd2: TestCommand = TestCommand::new(CommandId::Commit, "4", "5");
+//     let cmd0: Command = Command::new(CommandId::Remove, "9", "8");
+//     let cmd1: Command = Command::new(CommandId::Insert, "1", "2");
+//     let cmd2: Command = Command::new(CommandId::Commit, "4", "5");
 
 //     let vec = vec![cmd0, cmd1, cmd2];
 //     let len = vec.len();
-//     let commands = Box::into_raw(Box::new(vec)) as *mut TestCommand;
+//     let commands = Box::into_raw(Box::new(vec)) as *mut Command;
 //     println!("commands: {:p}", commands);
 
 //     VecCommands { len, commands }
@@ -296,8 +293,8 @@ impl From<&str> for TC {
 //         let vec: Box<VecCommands> = Box::from_raw(s);
 //         println!("vec.commands: {:p}", vec.commands);
 
-//         let commands: Box<Vec<TestCommand>> =
-//             Box::from_raw(vec.commands as *mut Vec<TestCommand>);
+//         let commands: Box<Vec<Command>> =
+//             Box::from_raw(vec.commands as *mut Vec<Command>);
 
 //         let vec = Vec::from_raw_parts(s.commands, s.len, s.len);
 

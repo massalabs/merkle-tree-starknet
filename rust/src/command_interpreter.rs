@@ -6,13 +6,13 @@ use bonsai_trie::{
     id::{BasicId, BasicIdBuilder},
     BonsaiStorage, BonsaiStorageError,
 };
-use rust_ffi::{CommandId, TestCommand};
+use rust_ffi::{Command, CommandId};
 use starknet_types_core::{felt::Felt, hash::Pedersen};
 
 // use crate::SharedTree;
 
 pub fn run_command<'a>(
-    command: &TestCommand,
+    command: &Command,
     id_builder: &mut BasicIdBuilder,
     bonsai_storage: &mut BonsaiStorage<BasicId, RocksDB<'a, BasicId>, Pedersen>,
 ) -> Result<Option<String>, BonsaiStorageError> {
