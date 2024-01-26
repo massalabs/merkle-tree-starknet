@@ -1,6 +1,5 @@
 use bonsai_trie::{
     databases::{create_rocks_db, RocksDB, RocksDBConfig},
-    id::BasicIdBuilder,
     BonsaiStorage, BonsaiStorageConfig,
 };
 
@@ -21,7 +20,6 @@ fn main() {
     let db1 = create_rocks_db("./rocksdb").unwrap();
 
     // Create a BonsaiStorage with default parameters.
-    let id_builder = BasicIdBuilder::new();
     let database = RocksDB::new(&db1, RocksDBConfig::default());
     let bonsai_storage: BonsaiStorage<_, _, Pedersen> =
         BonsaiStorage::new(database, config.clone()).unwrap();

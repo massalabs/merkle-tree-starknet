@@ -256,7 +256,8 @@ impl From<&str> for TC {
             "remove" => TC::Remove,
             "commit" => TC::Commit,
             "check_root_hash" => TC::CheckRootHash,
-            _ => panic!("Unknown command type ! Allowed type : insert, remove, commit, check_root_hash, end")
+            "revert_to" => TC::RevertTo,
+            _ => panic!("Unknown command type ! Allowed type : insert, remove, commit, check_root_hash, revert_to")
         }
     }
 }

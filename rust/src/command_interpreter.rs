@@ -39,9 +39,7 @@ pub fn run_command<'a>(
         }
         CommandId::Commit => {
             // let id = id_builder.new_id();
-            let id = command.value();
-            let id = id.parse::<u64>().unwrap();
-            let id = TestId(id);
+            let id = command.id();
             println!("commint {:?}", id);
             bonsai_storage.commit(id)
         }
@@ -54,12 +52,18 @@ pub fn run_command<'a>(
 
             Ok(())
         }
+        CommandId::RevertTo => {
+            let id = command.id();
+            println!("revert_to {:?}", id);
+            bonsai_storage.revert_to(id)
+        }
     }
 }
 
 trait CommandTrait {
     fn key(&self) -> Vec<u8>;
     fn value(&self) -> &str;
+    fn id(&self) -> TestId;
 }
 
 impl CommandTrait for Command {
@@ -68,28 +72,32 @@ impl CommandTrait for Command {
             CommandId::Insert => {
                 unsafe { CStr::from_ptr(self.arg2) }.to_str().unwrap()
             }
-            CommandId::Remove => unimplemented!("Remove has no value"),
-            CommandId::Commit => {
-                unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap()
-            }
             CommandId::CheckRootHash => {
                 unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap()
             }
+            _ => unimplemented!("Command has no value"),
         }
     }
 
     fn key(&self) -> Vec<u8> {
         match self.id {
-            CommandId::Insert => {
+            CommandId::Remove | CommandId::Insert => {
                 unsafe { CStr::from_ptr(self.arg1) }.to_bytes().to_vec()
             }
-            CommandId::Remove => {
-                unsafe { CStr::from_ptr(self.arg1) }.to_bytes().to_vec()
+            _ => unimplemented!("Command has no key"),
+        }
+    }
+
+    fn id(&self) -> TestId {
+        match self.id {
+            CommandId::Commit | CommandId::RevertTo => {
+                let id =
+                    { unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap() }
+                        .parse::<u64>()
+                        .unwrap();
+                TestId(id)
             }
-            CommandId::Commit => unimplemented!("Commit has no key"),
-            CommandId::CheckRootHash => {
-                unimplemented!("CheckRootHash has no key")
-            }
+            _ => unimplemented!("Command has no id"),
         }
     }
 }

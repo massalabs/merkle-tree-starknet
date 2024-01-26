@@ -7,3 +7,7 @@ result.txt
 main
 .idea
 rust/rocksdb*
+.vscode
+bindings.h
+managed_context/
+test_suite_analysis/
