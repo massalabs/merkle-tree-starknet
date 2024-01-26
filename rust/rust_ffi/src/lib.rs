@@ -1,5 +1,6 @@
 // #[macro_use]
 extern crate static_assertions;
+use yaml_rust::YamlLoader;
 
 #[no_mangle]
 pub extern "C" fn add(a: i32, b: i32) -> i32 {
@@ -7,6 +8,8 @@ pub extern "C" fn add(a: i32, b: i32) -> i32 {
 }
 
 use std::ffi::{CStr, CString};
+use std::fs::File;
+use std::io::Read;
 use std::os::raw::c_char;
 
 #[no_mangle]
@@ -85,6 +88,7 @@ pub struct TestCommand {
     pub arg1: *const c_char,
     pub arg2: *const c_char,
 }
+
 impl TestCommand {
     pub fn new(command: CommandId, a: &[u8], arg2: &str) -> Self {
         let arg1 = unsafe { std::str::from_utf8_unchecked(a) };
@@ -177,7 +181,7 @@ pub enum CommandId {
     Insert = 1,
     Remove = 2,
     Commit = 3,
-    RootHash = 4,
+    CheckRootHash = 4,
 }
 type TC = CommandId;
 
@@ -209,6 +213,58 @@ pub extern "C" fn get_test(id: TestId) -> TestCommandList {
         TestId::Test2 => get_test2(),
         TestId::Test3 => TestCommandList::default(),
         TestId::Count => TestCommandList::default(),
+    }
+}
+
+pub fn read_yaml_file(file_path: &str) -> std::io::Result<TestCommandList> {
+    let mut file = File::open(file_path)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    let docs = YamlLoader::load_from_str(&content).expect("Error parsing YAML");
+
+    let mut vec = vec![];
+
+    if let Some(doc) = docs.get(0) {
+        if let Some(commands) = doc["commands"].as_vec() {
+            for command in commands {
+                if let Some(tc_type) = command["action"].as_str() {
+                    let arg1 = if let Some(key) = command["arg1"].as_vec() {
+                        key.into_iter()
+                            .map(|x| x.as_i64().unwrap() as u8)
+                            .collect::<Vec<_>>()
+                    } else {
+                        vec![]
+                    };
+
+                    let arg2 = command["arg2"].as_str().unwrap_or_else(|| "");
+
+                    let command = TestCommand::new(
+                        TC::from(tc_type),
+                        arg1.as_slice(),
+                        arg2,
+                    );
+
+                    vec.push(command);
+                }
+            }
+        }
+    } else {
+        panic!("No data found in YAML file");
+    }
+
+    Ok(TestCommandList::new(&vec))
+}
+
+impl From<&str> for TC {
+    fn from(value: &str) -> Self {
+        match value.to_lowercase().as_str() {
+            "insert" => TC::Insert,
+            "remove" => TC::Remove,
+            "commit" => TC::Commit,
+            "check_root_hash" => TC::CheckRootHash,
+            "end" => TC::End,
+            _ => panic!("Unknown command type ! Allowed type : insert, remove, commit, check_root_hash, end")
+        }
     }
 }
 

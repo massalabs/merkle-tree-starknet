@@ -38,9 +38,15 @@ pub fn run_command<'a>(
         CommandId::End => {
             unimplemented!("End")
         }
-        CommandId::RootHash => {
-            let hash = bonsai_storage.root_hash().unwrap();
-            Ok(Some(hash.to_hex_string()))
+        CommandId::CheckRootHash => {
+            let hash = bonsai_storage.root_hash().unwrap().to_hex_string();
+            let ref_root_hash =
+                unsafe { CStr::from_ptr(command.arg1).to_str().unwrap() };
+            assert_eq!(&hash, ref_root_hash);
+            println!("root: {:#?}", hash);
+            println!("ref_root_hash: {:#?}", ref_root_hash);
+
+            Ok(None)
         }
     }
 }

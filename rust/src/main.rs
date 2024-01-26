@@ -16,6 +16,10 @@ mod command_interpreter;
 //mod shared_tree;
 
 fn main() {
+    let cmd_list = rust_ffi::read_yaml_file("./data.yml").unwrap();
+
+    dbg!(cmd_list);
+
     let config = BonsaiStorageConfig::default();
     let db1 = create_rocks_db("./rocksdb").unwrap();
 
@@ -78,10 +82,14 @@ fn main() {
     }
     rust_ffi::free_test(test1);
 
-    assert_eq!(
-        bonsai_storage.root_hash().unwrap(),
-        bonsai_storage2.root_hash().unwrap()
-    );
-    println!("root: {:#?}", bonsai_storage.root_hash());
-    println!("root: {:#?}", bonsai_storage2.root_hash());
+    // assert_eq!(
+    //     bonsai_storage.root_hash().unwrap(),
+    //     bonsai_storage2.root_hash().unwrap()
+    // );
+    // println!("root: {:#?}", bonsai_storage.root_hash());
+    // println!(
+    //     "root: {:#?}",
+    //     bonsai_storage.root_hash().unwrap().to_hex_string()
+    // );
+    // println!("root: {:#?}", bonsai_storage2.root_hash());
 }
