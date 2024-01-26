@@ -25,31 +25,6 @@ fn main() {
     let mut bonsai_storage: BonsaiStorage<_, _, Pedersen> =
         BonsaiStorage::new(database, config.clone()).unwrap();
 
-    let val =
-        Felt::from_hex("0x66342762FDD54D033c195fec3ce2568b62052e").unwrap();
-
-    bonsai_storage
-        .insert(&BitVec::from_vec(vec![1, 2, 1]), &val)
-        .unwrap();
-
-    bonsai_storage
-        .insert(
-            &BitVec::from_vec(vec![1, 2, 2]),
-            &Felt::from_hex("0x66342762FD54D033c195fec3ce2568b62052e").unwrap(),
-        )
-        .unwrap();
-
-    let id = id_builder.new_id();
-    bonsai_storage.commit(id).unwrap();
-
-    // remove
-    bonsai_storage
-        .remove(&BitVec::from_vec(vec![1, 2, 1]))
-        .unwrap();
-
-    // commit
-    bonsai_storage.commit(id_builder.new_id()).unwrap();
-
     let command_list = rust_ffi::get_test1();
 
     let commands = unsafe {
