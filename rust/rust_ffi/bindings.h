@@ -8,7 +8,7 @@ typedef enum CommandId {
   Insert = 1,
   Remove = 2,
   Commit = 3,
-  RootHash = 4,
+  CheckRootHash = 4,
 } CommandId;
 
 typedef enum TestId {
@@ -26,10 +26,10 @@ typedef struct TestCommand {
   const char *arg2;
 } TestCommand;
 
-typedef struct TestCommandList {
+typedef struct CommandList {
   const struct TestCommand *test_commands;
   uintptr_t len;
-} TestCommandList;
+} CommandList;
 
 int32_t add(int32_t a, int32_t b);
 
@@ -43,12 +43,12 @@ char *get_string(void);
 
 const uint8_t *ffi_string(void);
 
-struct TestCommandList get_test1(void);
+struct CommandList get_test1(void);
 
-struct TestCommandList get_test2(void);
+struct CommandList get_test2(void);
 
-void free_test(struct TestCommandList cmd);
+void free_test(struct CommandList cmd);
 
 struct TestCases get_test_cases(void);
 
-struct TestCommandList get_test(enum TestId id);
+struct CommandList get_test(enum TestId id);

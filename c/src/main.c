@@ -54,7 +54,7 @@ int main()
   //   destroy_leak(leaked);
   // }
 
-  TestCommandList test2 = get_test2();
+  CommandList test2 = get_test2();
   printf("len: %zu\n", test2.len);
 
   for (size_t i = 0; i < test2.len; i++)

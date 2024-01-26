@@ -106,11 +106,11 @@ impl TestCommand {
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct TestCommandList {
+pub struct CommandList {
     pub test_commands: *const TestCommand,
     pub len: usize,
 }
-impl TestCommandList {
+impl CommandList {
     pub fn new(commands: &[TestCommand]) -> Self {
         let commands: Vec<TestCommand> = commands.to_vec();
 
@@ -127,9 +127,9 @@ impl TestCommandList {
 }
 
 #[no_mangle]
-pub extern "C" fn get_test1() -> TestCommandList {
+pub extern "C" fn get_test1() -> CommandList {
     let key1 = &[1, 2, 1];
-    TestCommandList::new(&[
+    CommandList::new(&[
         TestCommand::new(
             TC::Insert,
             key1,
@@ -146,16 +146,16 @@ pub extern "C" fn get_test1() -> TestCommandList {
     ])
 }
 #[no_mangle]
-pub extern "C" fn get_test2() -> TestCommandList {
+pub extern "C" fn get_test2() -> CommandList {
     let cmd0: TestCommand = TestCommand::new(TC::Remove, &[1, 2, 1], "8");
     let cmd1: TestCommand = TestCommand::new(TC::Insert, &[1, 2, 1], "2");
     let cmd2: TestCommand = TestCommand::new(TC::Commit, &[1, 2, 1], "5");
 
-    TestCommandList::new(&[cmd0, cmd1, cmd2])
+    CommandList::new(&[cmd0, cmd1, cmd2])
 }
 
 #[no_mangle]
-pub extern "C" fn free_test(cmd: TestCommandList) {
+pub extern "C" fn free_test(cmd: CommandList) {
     if !cmd.test_commands.is_null() {
         // Convert the raw pointer back to a Vec,
         let vec = unsafe {
@@ -207,16 +207,16 @@ pub const extern "C" fn get_test_cases() -> TestCases {
 }
 
 #[no_mangle]
-pub extern "C" fn get_test(id: TestId) -> TestCommandList {
+pub extern "C" fn get_test(id: TestId) -> CommandList {
     match id {
         TestId::Test1 => get_test1(),
         TestId::Test2 => get_test2(),
-        TestId::Test3 => TestCommandList::default(),
-        TestId::Count => TestCommandList::default(),
+        TestId::Test3 => CommandList::default(),
+        TestId::Count => CommandList::default(),
     }
 }
 
-pub fn read_yaml_file(file_path: &str) -> std::io::Result<TestCommandList> {
+pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
     let mut file = File::open(file_path)?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -252,7 +252,7 @@ pub fn read_yaml_file(file_path: &str) -> std::io::Result<TestCommandList> {
         panic!("No data found in YAML file");
     }
 
-    Ok(TestCommandList::new(&vec))
+    Ok(CommandList::new(&vec))
 }
 
 impl From<&str> for TC {
