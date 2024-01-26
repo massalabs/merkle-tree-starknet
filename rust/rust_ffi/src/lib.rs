@@ -166,11 +166,10 @@ pub extern "C" fn free_test(cmd: CommandList) {
 #[repr(C)]
 #[derive(Debug, Clone)]
 pub enum CommandId {
-    End = 0,
-    Insert = 1,
-    Remove = 2,
-    Commit = 3,
-    CheckRootHash = 4,
+    Insert,
+    Remove,
+    Commit,
+    CheckRootHash,
 }
 type TC = CommandId;
 
@@ -253,7 +252,6 @@ impl From<&str> for TC {
             "remove" => TC::Remove,
             "commit" => TC::Commit,
             "check_root_hash" => TC::CheckRootHash,
-            "end" => TC::End,
             _ => panic!("Unknown command type ! Allowed type : insert, remove, commit, check_root_hash, end")
         }
     }
