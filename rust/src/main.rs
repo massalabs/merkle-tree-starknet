@@ -27,6 +27,6 @@ fn main() {
         BonsaiStorage::new(database, config.clone()).unwrap();
 
     let command_list = rust_ffi::get_test1();
-    run_test(&command_list, id_builder, bonsai_storage);
+    run_test(&command_list, bonsai_storage);
     rust_ffi::free_test(command_list);
 }

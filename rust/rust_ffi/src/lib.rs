@@ -170,6 +170,7 @@ pub enum CommandId {
     Remove,
     Commit,
     CheckRootHash,
+    RevertTo
 }
 type TC = CommandId;
 
@@ -203,6 +204,9 @@ pub extern "C" fn get_test(id: TestId) -> CommandList {
         TestId::Count => CommandList::default(),
     }
 }
+
+//TODO
+// check that id read from yaml file are monotonic and increasing
 
 pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
     let mut file = File::open(file_path)?;

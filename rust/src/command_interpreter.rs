@@ -3,18 +3,25 @@ use std::ffi::CStr;
 use bitvec::vec::BitVec;
 use bonsai_trie::{
     databases::RocksDB,
-    id::{BasicId, BasicIdBuilder},
+    id::{BasicIdBuilder, Id},
     BonsaiStorage, BonsaiStorageError,
 };
 use rust_ffi::{Command, CommandId};
 use starknet_types_core::{felt::Felt, hash::Pedersen};
 
-// use crate::SharedTree;
+/// A basic ID type that can be used for testing.
+#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
+pub struct TestId(pub u64);
+
+impl Id for TestId {
+    fn serialize(&self) -> Vec<u8> {
+        self.0.to_be_bytes().to_vec()
+    }
+}
 
 pub fn run_command<'a>(
     command: &Command,
-    id_builder: &mut BasicIdBuilder,
-    bonsai_storage: &mut BonsaiStorage<BasicId, RocksDB<'a, BasicId>, Pedersen>,
+    bonsai_storage: &mut BonsaiStorage<TestId, RocksDB<'a, TestId>, Pedersen>,
 ) -> Result<(), BonsaiStorageError> {
     match command.id {
         CommandId::Insert => {
@@ -31,7 +38,10 @@ pub fn run_command<'a>(
             bonsai_storage.remove(&BitVec::from_vec(key))
         }
         CommandId::Commit => {
-            let id = id_builder.new_id();
+            // let id = id_builder.new_id();
+            let id = command.value();
+            let id = id.parse::<u64>().unwrap();
+            let id = TestId(id);
             println!("commint {:?}", id);
             bonsai_storage.commit(id)
         }
@@ -59,7 +69,9 @@ impl CommandTrait for Command {
                 unsafe { CStr::from_ptr(self.arg2) }.to_str().unwrap()
             }
             CommandId::Remove => unimplemented!("Remove has no value"),
-            CommandId::Commit => unimplemented!("Commit has no value"),
+            CommandId::Commit => {
+                unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap()
+            }
             CommandId::CheckRootHash => {
                 unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap()
             }
@@ -83,12 +95,8 @@ impl CommandTrait for Command {
 }
 pub fn run_test(
     command_list: &rust_ffi::CommandList,
-    mut id_builder: BasicIdBuilder,
-    mut bonsai_storage: BonsaiStorage<
-        bonsai_trie::id::BasicId,
-        RocksDB<'_, bonsai_trie::id::BasicId>,
-        Pedersen,
-    >,
+
+    mut bonsai_storage: BonsaiStorage<TestId, RocksDB<'_, TestId>, Pedersen>,
 ) {
     let commands = unsafe {
         std::slice::from_raw_parts(
@@ -98,7 +106,6 @@ pub fn run_test(
     };
 
     for command in commands {
-        let _ = run_command(&command, &mut id_builder, &mut bonsai_storage)
-            .unwrap();
+        let _ = run_command(&command, &mut bonsai_storage).unwrap();
     }
 }

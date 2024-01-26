@@ -6,8 +6,10 @@ commands:
     arg1: [1, 2, 2]
     arg2: "0x66342762FD54D033c195fec3ce2568b62052e"
   - action: commit
+    arg1: "1"
   - action: remove
     arg1: [1, 2, 1]
   - action: commit
+    arg1: "2"
   - action: check_root_hash
     arg1: "0x1b3743ac060a8a333a908edc22007987c596aa0de812965677cfbab82d4c2f3"

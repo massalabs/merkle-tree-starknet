@@ -11,6 +11,8 @@ crate-type = ["cdylib", "lib"]
 [dependencies]
 static_assertions = "1.1.0"
 yaml-rust = "0.4"
+# just for the BasicId
+#bonsai-trie = { git = "https://github.com/keep-starknet-strange/bonsai-trie" }
 
 [build-dependencies]
 cbindgen = "0.26.0"
