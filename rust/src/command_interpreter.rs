@@ -12,7 +12,7 @@ use starknet_types_core::{felt::Felt, hash::Pedersen};
 pub struct TestId(pub u64);
 
 impl Id for TestId {
-    fn serialize(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_be_bytes().to_vec()
     }
 }
@@ -20,15 +20,19 @@ impl Id for TestId {
 pub fn run_command<'a>(
     command: &Command,
     bonsai_storage: &mut BonsaiStorage<TestId, RocksDB<'a, TestId>, Pedersen>,
-) -> Result<(), BonsaiStorageError> {
-    match command.id {
+) {
+    let _r = match command.id {
         CommandId::Insert => {
             let key = command.key();
             let value = command.value();
 
             println!("insert {:?} {}", key, value);
+            let key_bitvec = BitVec::from_vec(key);
+            // println!("key_bitvec: {:#?}", key_bitvec);
+            let felt = Felt::from_hex(&value).unwrap();
+            println!("felt: {:#?}", felt);
             bonsai_storage
-                .insert(&BitVec::from_vec(key), &Felt::from_hex(value).unwrap())
+                .insert(&key_bitvec, &felt)
         }
         CommandId::Remove => {
             let key = command.key();
@@ -38,13 +42,13 @@ pub fn run_command<'a>(
         CommandId::Commit => {
             // let id = id_builder.new_id();
             let id = command.id();
-            println!("commint {:?}", id);
+            println!("commit {:?}", id);
             bonsai_storage.commit(id)
         }
         CommandId::CheckRootHash => {
             let hash = bonsai_storage.root_hash().unwrap().to_hex_string();
             let ref_root_hash = command.value();
-            assert_eq!(&hash, ref_root_hash);
+            assert_eq!(&hash, &ref_root_hash);
             println!("root: {:#?}", hash);
             println!("ref_root_hash: {:#?}", ref_root_hash);
 
@@ -60,9 +64,11 @@ pub fn run_command<'a>(
             let value = command.value();
 
             println!("get {:?} {}", key, value);
+            let res = bonsai_storage.get(&BitVec::from_vec(key)).unwrap().unwrap();
+            println!("res: {:#?}", res);
             assert_eq!(
-                bonsai_storage.get(&BitVec::from_vec(key)).unwrap().unwrap(),
-                Felt::from_hex(value).unwrap()
+                res,
+                Felt::from_hex(&value).unwrap()
             );
             Ok(())
         }
@@ -78,47 +84,64 @@ pub fn run_command<'a>(
         CommandId::GetProof => {
             let key = command.key();
             let value = command.value();
-            let v = value.to_string().split(',').map(|v| v.to_string()).collect::<Vec<String>>();
+            let v = value
+                .to_string()
+                .split(',')
+                .map(|v| v.to_string())
+                .collect::<Vec<String>>();
 
             println!("get_proof {:?} {}", key, value);
-            let proof = bonsai_storage
-                .get_proof(&BitVec::from_vec(key))
-                .unwrap();
+            let proof =
+            bonsai_storage.get_proof(&BitVec::from_vec(key)).unwrap();
+            println!("proof: {:#?}", proof);
+
+            assert_eq!(v.len(), proof.len());
 
             for i in 0..proof.len() {
                 assert_eq!(v[i], proof[i].hash::<Pedersen>().to_hex_string());
             }
-
             Ok(())
-        },
+        }
         CommandId::VerifyProof => todo!(),
-    }
+    };
 }
 
 trait CommandTrait {
     fn key(&self) -> Vec<u8>;
-    fn value(&self) -> &str;
+    fn value(&self) -> String;
     fn id(&self) -> TestId;
+    fn get_arg1(&self) -> String;
 }
 
 impl CommandTrait for Command {
-    fn value(&self) -> &str {
+    fn value(&self) -> String {
         match self.id {
-            CommandId::Insert | CommandId::Contains | CommandId::Get | CommandId::GetProof => {
-                unsafe { CStr::from_ptr(self.arg2) }.to_str().unwrap()
-            }
-            CommandId::CheckRootHash => {
-                unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap()
-            }
+            CommandId::Insert
+            | CommandId::Contains
+            | CommandId::Get
+            | CommandId::GetProof => unsafe { CStr::from_ptr(self.arg2) }
+                .to_str()
+                .unwrap()
+                .to_string(),
+            CommandId::CheckRootHash => self.get_arg1(),
             _ => unimplemented!("Command has no value"),
         }
     }
 
+    fn get_arg1(&self) -> String {
+        let arg1 = unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap();
+        let arg1 = bs58::decode(arg1).into_vec().unwrap();
+        let arg1 = unsafe { std::str::from_utf8_unchecked(&arg1) };
+        arg1.to_string()
+    }
+
     fn key(&self) -> Vec<u8> {
         match self.id {
-            CommandId::Remove | CommandId::Insert | CommandId::Contains | CommandId::Get | CommandId::GetProof => {
-                unsafe { CStr::from_ptr(self.arg1) }.to_bytes().to_vec()
-            }
+            CommandId::Remove
+            | CommandId::Insert
+            | CommandId::Contains
+            | CommandId::Get
+            | CommandId::GetProof => self.get_arg1().into_bytes(),
             _ => unimplemented!("Command has no key"),
         }
     }
@@ -127,9 +150,10 @@ impl CommandTrait for Command {
         match self.id {
             CommandId::Commit | CommandId::RevertTo => {
                 let id =
-                    { unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap() }
+                    self.get_arg1()
                         .parse::<u64>()
                         .unwrap();
+
                 TestId(id)
             }
             _ => unimplemented!("Command has no id"),
@@ -149,6 +173,6 @@ pub fn run_test(
     };
 
     for command in commands {
-        let _ = run_command(&command, &mut bonsai_storage).unwrap();
+        let _ = run_command(&command, &mut bonsai_storage);
     }
 }

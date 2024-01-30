@@ -24,7 +24,11 @@ fn main() {
     let bonsai_storage: BonsaiStorage<_, _, Pedersen> =
         BonsaiStorage::new(database, config.clone()).unwrap();
 
-    let command_list = rust_ffi::get_test1();
+    // let command_list = rust_ffi::get_test1();
+    // run_test(&command_list, bonsai_storage);
+    // rust_ffi::free_test(command_list);
+
+    let command_list = rust_ffi::get_test2();
     run_test(&command_list, bonsai_storage);
     rust_ffi::free_test(command_list);
 }

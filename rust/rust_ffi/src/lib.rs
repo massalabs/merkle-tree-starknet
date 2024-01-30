@@ -1,6 +1,7 @@
 // #[macro_use]
 extern crate static_assertions;
 use yaml_rust::YamlLoader;
+use bs58;
 
 #[no_mangle]
 pub extern "C" fn add(a: i32, b: i32) -> i32 {
@@ -134,13 +135,13 @@ pub extern "C" fn get_test1() -> CommandList {
     dbg!(&cmd_list);
     cmd_list
 }
+
 #[no_mangle]
 pub extern "C" fn get_test2() -> CommandList {
-    let cmd0: Command = Command::new(TC::Remove, "0x490x500x51", "8");
-    let cmd1: Command = Command::new(TC::Insert, "0x490x500x49", "2");
-    let cmd2: Command = Command::new(TC::Commit, "0x490x500x49", "5");
+    let cmd_list = read_yaml_file("./scenario/2.yml").unwrap();
 
-    CommandList::new(&[cmd0, cmd1, cmd2])
+    dbg!(&cmd_list);
+    cmd_list
 }
 
 #[no_mangle]
@@ -239,7 +240,10 @@ pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
 
                     let arg2 = command["arg2"].as_str().unwrap_or_else(|| "");
 
-                    let command = Command::new(TC::from(tc_type), arg1, arg2);
+                    // temporary we probably need to pass a byte array
+                    let arg1 = bs58::encode(arg1).into_string();
+
+                    let command = Command::new(TC::from(tc_type), &arg1, arg2);
 
                     vec.push(command);
                 }
