@@ -1,7 +1,7 @@
 // #[macro_use]
 extern crate static_assertions;
-use yaml_rust::YamlLoader;
 use bs58;
+use yaml_rust::YamlLoader;
 
 #[no_mangle]
 pub extern "C" fn add(a: i32, b: i32) -> i32 {
@@ -224,6 +224,19 @@ pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
     if let Some(doc) = docs.get(0) {
         if let Some(commands) = doc["commands"].as_vec() {
             for command in commands {
+                match command["action"] {
+                    yaml_rust::Yaml::String(ref s) => {
+                        if s == "insert" {
+                            println!("insert");
+                        } else if s == "remove" {
+                            println!("remove");
+                        } else if s == "commit" {
+                            println!("commit");
+                        }
+                    }
+                    _ => panic!("Unknown command type"),
+                };
+
                 if let Some(tc_type) = command["action"].as_str() {
                     let b;
 
@@ -268,7 +281,7 @@ impl From<&str> for TC {
             "get" => TC::Get,
             "get_proof" => TC::GetProof,
             "verify_proof" => TC::VerifyProof,
-            _ => panic!("Unknown command type")
+            _ => panic!("Unknown command type"),
         }
     }
 }

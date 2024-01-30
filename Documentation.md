@@ -12,7 +12,7 @@ implies:
  -->
 ## implem A
 ## implem B
-## Comparision (qualities and drawbacks).
+## Comparison (qualities and drawbacks).
 
 # How to test your implementation
 ## If needed write your runner

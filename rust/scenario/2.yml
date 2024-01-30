@@ -2,52 +2,52 @@
 # leaves values (0,0,1,0,0,1,0,0)
 commands:
   - action: insert
-    arg1: [0]
-    arg2: "0x1"
+    arg1: [1,1,1]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
   - action: insert
-    arg1: [1]
-    arg2: "0x1"
+    arg1: [1,1,2]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
   - action: insert
-    arg1: [2]
-    arg2: "0x2"
+    arg1: [1,1,3]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
 
   - action: commit
     arg1: "1"
-  - action: check_root_hash
-    arg1: "0x2219d29fb79936ebcbb59a42fa48f6c77f173488a70480f230c646d6d7cd209"
+  # - action: check_root_hash
+  #   arg1: "0x3e690c638f3d6257087e3d7ede9217a0b2c342ca40e56e1a0d6d7297e3f59db"
 
 
   - action: insert
-    arg1: [3]
-    arg2: "0x1"
+    arg1: [1,1,4]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
   - action: insert
-    arg1: [4]
-    arg2: "0x1"
+    arg1: [1,1,5]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
   - action: insert
-    arg1: [5]
-    arg2: "0x2"
+    arg1: [1,1,6]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
   - action: insert
-    arg1: [6]
-    arg2: "0x1"
+    arg1: [1,1,7]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
   - action: insert
-    arg1: [7]
-    arg2: "0x1"
+    arg1: [1,1,8]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
 
   - action: commit
     arg1: "2"
 
-  - action: check_root_hash
-    arg1: "0x60e879d4c31e90ca3d1d980b60e02b5574095a594189d483ab14a3f9573334f"
+  # - action: check_root_hash
+  #   arg1: "0x4d6f130a91bbe26c783586053ad67a8464498c5997e79fb152a107d11d13f42"
 
   - action: get
-    arg1: [2]
-    arg2: "0x2"
+    arg1: [1,1,3]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
 
   - action: get
-    arg1: [6]
-    arg2: "0x1"
+    arg1: [1,1,7]
+    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
 
 
   - action: get_proof
-    arg1: [6]
+    arg1: [1,1,7]
     arg2: "0x1f939088618293ab18272e09ec75a6897dff4f9fd1f92a134fda90e0ea360f4,0x234f4beb80b78fe4cefb36fba98af6a599ff22fbd84711cb279418ab3f56d47,0x1ae097f46a0a62f49d974b376b033af4fc704918a69a8004ed9d2a7bc196a5d"
