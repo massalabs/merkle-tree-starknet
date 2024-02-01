@@ -1,8 +1,8 @@
 package main
 
-// #cgo LDFLAGS: -L../../rust_ffi/target/debug
+// #cgo LDFLAGS: -L../../rust/rust_ffi/target/debug
 // #cgo LDFLAGS: -lrust_ffi
-// #cgo CPPFLAGS: -I../../rust_ffi
+// #cgo CPPFLAGS: -I../../rust/rust_ffi
 // #include "bindings.h"
 // #include <stdlib.h>
 import "C"
