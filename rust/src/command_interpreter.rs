@@ -30,7 +30,7 @@ pub fn run_command<'a>(
             let key_bitvec = BitVec::from_vec(key);
             // println!("key_bitvec: {:#?}", key_bitvec);
             let felt = Felt::from_hex(&value).unwrap();
-            println!("felt: {:#?}", felt);
+            // println!("felt: {:#?}", felt);
             bonsai_storage
                 .insert(&key_bitvec, &felt)
         }

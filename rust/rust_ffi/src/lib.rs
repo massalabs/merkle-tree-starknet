@@ -130,7 +130,7 @@ impl CommandList {
 
 #[no_mangle]
 pub extern "C" fn get_test1() -> CommandList {
-    let cmd_list = read_yaml_file("./scenario/1.yml").unwrap();
+    let cmd_list = read_yaml_file("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/1.yml").unwrap();
 
     dbg!(&cmd_list);
     cmd_list
@@ -138,7 +138,15 @@ pub extern "C" fn get_test1() -> CommandList {
 
 #[no_mangle]
 pub extern "C" fn get_test2() -> CommandList {
-    let cmd_list = read_yaml_file("./scenario/2.yml").unwrap();
+    let cmd_list = read_yaml_file("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/2.yml").unwrap();
+
+    dbg!(&cmd_list);
+    cmd_list
+}
+
+#[no_mangle]
+pub extern "C" fn get_test3() -> CommandList {
+    let cmd_list = read_yaml_file("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/3.yml").unwrap();
 
     dbg!(&cmd_list);
     cmd_list

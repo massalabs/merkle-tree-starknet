@@ -28,7 +28,7 @@ fn main() {
     // run_test(&command_list, bonsai_storage);
     // rust_ffi::free_test(command_list);
 
-    let command_list = rust_ffi::get_test2();
+    let command_list = rust_ffi::get_test3();
     run_test(&command_list, bonsai_storage);
     rust_ffi::free_test(command_list);
 }
