@@ -105,6 +105,14 @@ impl Command {
     }
 }
 
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct ArrayWrapper {
+    pub ptr: *const u8,
+    pub len: usize,
+}
+
 #[repr(C)]
 #[derive(Debug)]
 pub struct CommandList {
@@ -129,25 +137,10 @@ impl CommandList {
 }
 
 #[no_mangle]
-pub extern "C" fn get_test1() -> CommandList {
-    let cmd_list = read_yaml_file("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/1.yml").unwrap();
-
-    dbg!(&cmd_list);
-    cmd_list
-}
-
-#[no_mangle]
-pub extern "C" fn get_test2() -> CommandList {
-    let cmd_list = read_yaml_file("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/2.yml").unwrap();
-
-    dbg!(&cmd_list);
-    cmd_list
-}
-
-#[no_mangle]
-pub extern "C" fn get_test3() -> CommandList {
-    let cmd_list = read_yaml_file("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/3.yml").unwrap();
-
+pub extern "C" fn load_scenario(s: *const c_char) -> CommandList {
+    let c_str = unsafe { CStr::from_ptr(s) };
+    let file_path = c_str.to_string_lossy().into_owned();
+    let cmd_list = read_yaml_file(&file_path).unwrap();
     dbg!(&cmd_list);
     cmd_list
 }
@@ -208,16 +201,6 @@ pub const extern "C" fn get_test_cases() -> TestCases {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn get_test(id: TestId) -> CommandList {
-    match id {
-        TestId::Test1 => get_test1(),
-        TestId::Test2 => get_test2(),
-        TestId::Test3 => CommandList::default(),
-        TestId::Count => CommandList::default(),
-    }
-}
-
 //TODO
 // check that id read from yaml file are monotonic and increasing
 
@@ -232,18 +215,18 @@ pub fn read_yaml_file(file_path: &str) -> std::io::Result<CommandList> {
     if let Some(doc) = docs.get(0) {
         if let Some(commands) = doc["commands"].as_vec() {
             for command in commands {
-                match command["action"] {
-                    yaml_rust::Yaml::String(ref s) => {
-                        if s == "insert" {
-                            println!("insert");
-                        } else if s == "remove" {
-                            println!("remove");
-                        } else if s == "commit" {
-                            println!("commit");
-                        }
-                    }
-                    _ => panic!("Unknown command type"),
-                };
+                // match command["action"] {
+                //     yaml_rust::Yaml::String(ref s) => {
+                //         if s == "insert" {
+                //             println!("insert");
+                //         } else if s == "remove" {
+                //             println!("remove");
+                //         } else if s == "commit" {
+                //             println!("commit");
+                //         }
+                //     }
+                //     _ => panic!("Unknown command type"),
+                // };
 
                 if let Some(tc_type) = command["action"].as_str() {
                     let b;

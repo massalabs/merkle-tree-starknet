@@ -53,8 +53,12 @@ int main()
   */
   //   destroy_leak(leaked);
   // }
+  char *sc2 =
+      "/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/2.yml";
 
-  CommandList test2 = get_test2();
+  CommandList test2 = load_scenario(sc2);
+  // CommandList test2 = get_test2();
+
   printf("len: %zu\n", test2.len);
 
   for (size_t i = 0; i < test2.len; i++)

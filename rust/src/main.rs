@@ -2,7 +2,7 @@ use bonsai_trie::{
     databases::{create_rocks_db, RocksDB, RocksDBConfig},
     BonsaiStorage, BonsaiStorageConfig,
 };
-
+use std::ffi::CString;
 use command_interpreter::run_test;
 
 // use rust_ffi::{get_test_cases};
@@ -27,8 +27,18 @@ fn main() {
     // let command_list = rust_ffi::get_test1();
     // run_test(&command_list, bonsai_storage);
     // rust_ffi::free_test(command_list);
+    let c_string = CString::new("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/3.yml").expect("Failed to create CString");
 
-    let command_list = rust_ffi::get_test3();
+    // Leak the CString to ensure it lives long enough to be used from other
+    // languages
+    let scenario3 = c_string.into_raw();
+
+    // let scenario3 = "/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/3.yml";
+    let command_list = rust_ffi::load_scenario(scenario3);
+
+    // let command_list = rust_ffi::get_test3();
     run_test(&command_list, bonsai_storage);
     rust_ffi::free_test(command_list);
+    // free leak of the file path
+    let _ = unsafe {CString::from_raw(scenario3)};
 }

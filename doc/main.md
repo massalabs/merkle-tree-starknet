@@ -128,13 +128,6 @@ Terminology:
 
 [specification]: https://docs.starknet.io/documentation/develop/State/starknet-state/
 
-## implem E - [Hyperledger - Besu - Java](https://github.com/hyperledger/besu/tree/1a7635bc3ef75c31e5c5ac050b2cd3a22d833ada/ethereum/core/src/main/java/org/hyperledger/besu/ethereum/bonsai)
-
-Hyperledger besu implementation
-
-Bonsai Tries is a data storage layout policy designed to reduce storage requirements and increase read performance.
-
-Bonsai stores leaf values in a trie log, separate from the branches of the trie. Bonsai stores nodes by the location of the node instead of the hash of the node. Bonsai can access the leaf from the underlying storage directly using the account key. This greatly reduces the disk space needed for storage and allows for less resource-demanding and faster read performance. Bonsai inherently prunes orphaned nodes and old branches.
 
 ## Comparison (qualities and drawbacks).
 
@@ -143,14 +136,11 @@ Implementation | Language | Qualities      | Drawbacks
 Pathfinder  | Rust | High performance, scalability, Cairo specification adherence |
 Juno  | Golang        |    User-friendliness, ease of deployment, Ethereum compatibility    |
   Starkware - Patricia tree | python |       | python lol
-  Bonsai | Rust |  Optimized for holding Starknet Felt items, Madara-compatible root hash, A Flat DB allowing direct access to items without requiring trie traversal, Trie Logs, Thread-safe transactional states       |
+  Bonsai | Rust |  Can revert to specific commit, Optimized for holding Starknet Felt items, Madara-compatible root hash, A Flat DB allowing direct access to items without requiring trie traversal, Trie Logs, Thread-safe transactional states       |
 
-# How to test your implementation
-## If needed write your runner
-## Implement the interface / trait that glued your implementation with the test framework
+# [How to test your implementation](./test_framework.md)
 
-
-## Resources
+# Resources
 
 - https://github.com/keep-starknet-strange/bonsai-trie
   - https://github.com/keep-starknet-strange/bonsai-trie/blob/oss/src/trie/merkle_tree.rs
@@ -166,6 +156,17 @@ Juno  | Golang        |    User-friendliness, ease of deployment, Ethereum compa
   https://docs.alchemy.com/docs/patricia-merkle-tries
 
 - starknet docs : https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#merkle_patricia_trie
+
+## [Hyperledger - Besu - Java](https://github.com/hyperledger/besu/tree/1a7635bc3ef75c31e5c5ac050b2cd3a22d833ada/ethereum/core/src/main/java/org/hyperledger/besu/ethereum/bonsai)
+
+Similar data structure, for reference
+
+Hyperledger besu implementation
+
+Bonsai Tries is a data storage layout policy designed to reduce storage requirements and increase read performance.
+
+Bonsai stores leaf values in a trie log, separate from the branches of the trie. Bonsai stores nodes by the location of the node instead of the hash of the node. Bonsai can access the leaf from the underlying storage directly using the account key. This greatly reduces the disk space needed for storage and allows for less resource-demanding and faster read performance. Bonsai inherently prunes orphaned nodes and old branches.
+
 
 
 <!--
