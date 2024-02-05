@@ -113,6 +113,14 @@ func run_command(command *C.Command, tree *trie.Trie) {
 }
 ```
 
+Implementation example :
+-  [Golang](../go/src/main.go#43)
+-  [Python](../python/main.py)
+-  [Rust](../rust/src/command_interpreter.rs)
+-  [TypeScript](../typescript/deno/main.ts)
+-  [C](../c/src/main.c)
+-  [Zig](../zig/src/main.zig)
+
 
 
 ## If needed write your runner
