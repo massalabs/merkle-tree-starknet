@@ -11,3 +11,6 @@ rust/rocksdb*
 bindings.h
 managed_context/
 test_suite_analysis/
+venv/
+cairo-lang/
+__pycache__/
