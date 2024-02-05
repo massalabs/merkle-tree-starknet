@@ -29,15 +29,33 @@ Offer an uniform way to execute operations over an *Implementation* and validate
 Glues the *Framework* and the *Implementation*. Its role is to request test instructions from the *Framework*, call the *Implementation* accordingly then pass the result back to the *Framework*.
 
 
-# Technical considerations
+# Design considerations
+## Languages interoperability
+Generally, languages offer interoperability with other language with via the so called `FFI` foreign function interface.
+`FFI` is closely related to the language memory model and many low level details like function arguments passing for function calls, etc.
+The defacto standard for `FFI` is the `C` ABI which literarily means that all languages have to pass (and retrieve) arguments to(from) functions the `C` way and organize struct fields the `C` way (to name few).
+Given that the `C` language has no memory management, allocated objects have to be manually freed to prevent memory leak. Language with a garbage collector
+
+ABI has an impact over API. API in `C` are provided through so called `.h` files that defines `structs`, `enum` and functions signatures.
+
+
+Here are some details for each targeted languages:
+- C: obviously `C` uses the `C` ABI. In order to use a library build for interoperability with `C` a client only need the binary of that library and ideally its associated `.h`. Provided those two elements
+- go,
+- rust,
+- typescript,
+- python,
+- zig.
+
+
 ### *Implementation*
-By definition 
- It's API is already defined by definition.
+By definition a PMT *Implementation* defines its API, the set of operations to interact with the tree. From an implementation to another that set of operations may vary, see [main document](./main.md) for a comparison between known implementations.
+Because of those variations in operation sets some test cases may fail for some and succeed for others.
+
 ### *Framework*
-This is the main deliverable.
-It is delivered:
-- as a rust library that exposes its interfaces with the `C` ABI.
-- TBC: it is also delivered as a `wasm` file.
+The *Framework* is implemented in Rust.
+It is delivered as a library that exposes its interfaces with the `C` ABI in order to be interoperable with as many language as possible.
+
 
 ### *Runners* and bindings
 For *Runners* to call the *Framework* we also provide thin bindings to C for go, python and zig.

@@ -61,3 +61,4 @@ const concatenate_strings = Deno.UnsafePointerView.getCString(
   dylib.symbols.concatenate_strings(buf1, buf2)
 );
 console.log("buffer from concatenated string:", concatenate_strings);
+

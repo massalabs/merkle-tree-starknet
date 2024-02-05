@@ -16,4 +16,3 @@ mp-felt = { git = "https://github.com/keep-starknet-strange/madara.git", rev = "
     "serde",
 ] }
 bitvec = "1.0.1"
-bs58 = "0.5.0"

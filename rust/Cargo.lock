@@ -2232,7 +2232,6 @@ version = "0.1.0"
 dependencies = [
  "bitvec",
  "bonsai-trie",
- "bs58",
  "mp-felt",
  "rust_ffi",
  "starknet-types-core",

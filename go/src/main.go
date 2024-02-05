@@ -15,24 +15,9 @@ import (
 	"github.com/NethermindEth/juno/core/felt"
 	"github.com/NethermindEth/juno/core/trie"
 	"github.com/NethermindEth/juno/db"
-
-	// "github.com/itchyny/base58-go"
-	"github.com/mr-tron/base58"
 )
 
 func main() {
-	addition := C.add(34, 35)
-	fmt.Println("Result from external addition of 35 and 34: ", addition)
-
-	hello := C.CString("Hello")
-	defer C.free(unsafe.Pointer(hello)) // schedule the release of the memory
-	world := C.CString(" world!")
-	defer C.free(unsafe.Pointer(world)) // schedule the release of the memory
-
-	concatenated := C.concatenate_strings(hello, world)
-	fmt.Println(C.GoString(concatenated))
-	C.free_concatenated_string(concatenated)
-
 	// a storage in memory
 	storage := trie.NewTransactionStorage(db.NewMemTransaction(), nil)
 
@@ -114,21 +99,15 @@ func run_command(command *C.Command, tree *trie.Trie) {
 	}
 }
 
-func get_arg1(command *C.Command) string {
-	arg1 := C.GoString(command.arg1)
-	decoded, err := base58.Decode(arg1)
-	if err != nil {
-		panic("error decoding")
-	}
-	return string(decoded)
-}
 
 func id(command *C.Command) int {
 	switch command.id {
 	case C.Commit:
 		fallthrough
 	case C.RevertTo:
-		i, err := strconv.Atoi(get_arg1(command))
+		arr := unsafe.Slice(command.arg1.ptr , command.arg1.len)
+		str := string(arr)
+		i, err := strconv.Atoi(str)
 		if err != nil {
 			panic("error converting")
 		}
@@ -139,43 +118,29 @@ func id(command *C.Command) int {
 }
 
 func value(command *C.Command) string {
-
 	switch command.id {
-	case C.Insert:
-		fallthrough
-	case C.Contains:
-		fallthrough
-	case C.Get:
-		fallthrough
-	case C.GetProof:
-		arg2 := C.GoString(command.arg2)
-		return string(arg2)
+	case C.Insert, C.Contains, C.Get, C.GetProof:
+		return string(C.GoString(command.arg2))
 	case C.CheckRootHash:
-		return get_arg1(command)
-
+		return string(unsafe.Slice(command.arg1.ptr, command.arg1.len))
 	default:
 		panic("unknown command")
-
 	}
 }
 
 func key(command *C.Command) []uint8 {
 	switch command.id {
-	case C.Remove:
-		fallthrough
-	case C.Insert:
-		fallthrough
-	case C.Contains:
-		fallthrough
-	case C.Get:
-		fallthrough
-	case C.GetProof:
-		key := get_arg1(command)
-		return []byte(key)
+	case C.Remove, C.Insert, C.Contains, C.Get, C.GetProof:
+		arr := unsafe.Slice((*uint8)(command.arg1.ptr), command.arg1.len)
+		// convertedArr := make([]uint8, len(arr))
+		// for i, v := range arr {
+		// 	convertedArr[i] = uint8(v)
+		// }
+		// return convertedArr
+		return arr
 
 	default:
 		panic("unknown command")
-
 	}
-
 }
+

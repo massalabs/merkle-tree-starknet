@@ -4,7 +4,7 @@ use bitvec::vec::BitVec;
 use bonsai_trie::{
     databases::RocksDB, id::Id, BonsaiStorage, BonsaiStorageError,
 };
-use rust_ffi::{Command, CommandId};
+use rust_ffi::{Command, CommandId, ArrayWrapper};
 use starknet_types_core::{felt::Felt, hash::Pedersen};
 
 /// A basic ID type that can be used for testing.
@@ -129,10 +129,14 @@ impl CommandTrait for Command {
     }
 
     fn get_arg1(&self) -> String {
-        let arg1 = unsafe { CStr::from_ptr(self.arg1) }.to_str().unwrap();
-        let arg1 = bs58::decode(arg1).into_vec().unwrap();
-        let arg1 = unsafe { std::str::from_utf8_unchecked(&arg1) };
-        arg1.to_string()
+        let arr = unsafe {
+            std::slice::from_raw_parts(
+                self.arg1.ptr as *mut u8,
+                self.arg1.len,
+            )
+        };
+
+        String::from_utf8(arr.to_vec()).unwrap()
     }
 
     fn key(&self) -> Vec<u8> {
@@ -141,7 +145,15 @@ impl CommandTrait for Command {
             | CommandId::Insert
             | CommandId::Contains
             | CommandId::Get
-            | CommandId::GetProof => self.get_arg1().into_bytes(),
+            | CommandId::GetProof =>  {
+                let arr = unsafe {
+                    std::slice::from_raw_parts(
+                        self.arg1.ptr as *mut u8,
+                        self.arg1.len,
+                    )
+                };
+                arr.to_vec()
+            },
             _ => unimplemented!("Command has no key"),
         }
     }
