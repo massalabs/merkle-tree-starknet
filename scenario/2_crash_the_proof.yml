@@ -4,15 +4,24 @@ commands:
   - action: insert
     arg1: [0]
     arg2: "0x1"
+  - action: commit
+    arg1: "1"
+  - action: check_root_hash
+    arg1: "0x268a9d47dde48af4b6e2c33932ed1c13adec25555abaa837c376af4ea2f8a9c"
+
   - action: insert
     arg1: [1]
     arg2: "0x1"
+  - action: commit
+    arg1: "2"
+  - action: check_root_hash
+    arg1: "0x7fe9c276f22b07d395434be0e50abef81ab232b4ea850f3b0442a2cc6d1332a"
+
   - action: insert
     arg1: [2]
     arg2: "0x2"
-
   - action: commit
-    arg1: "1"
+    arg1: "3"
   - action: check_root_hash
     arg1: "0x2219d29fb79936ebcbb59a42fa48f6c77f173488a70480f230c646d6d7cd209"
 

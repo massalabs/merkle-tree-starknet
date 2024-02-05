@@ -65,7 +65,7 @@ pub fn run_command<'a>(
 
             println!("get {:?} {}", key, value);
             let res = bonsai_storage.get(&BitVec::from_vec(key)).unwrap().unwrap();
-            println!("res: {:#?}", res);
+            // println!("res: {:#?}", res);
             assert_eq!(
                 res,
                 Felt::from_hex(&value).unwrap()

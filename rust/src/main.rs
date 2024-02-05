@@ -27,7 +27,7 @@ fn main() {
     // let command_list = rust_ffi::get_test1();
     // run_test(&command_list, bonsai_storage);
     // rust_ffi::free_test(command_list);
-    let c_string = CString::new("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/3.yml").expect("Failed to create CString");
+    let c_string = CString::new("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/2_crash_the_proof.yml").expect("Failed to create CString");
 
     // Leak the CString to ensure it lives long enough to be used from other
     // languages
