@@ -1,5 +1,6 @@
 # main.py
 
+import binascii
 import ctypes
 import os
 import platform
@@ -53,6 +54,7 @@ from typing import Iterable, Set, Tuple
 from queue import Queue
 
 import sys
+
 # get python home
 py_home: str = sys.prefix
 # needed to import from starkware
@@ -196,37 +198,28 @@ async def test_empty_tree(ffc: FactFetchingContext):
     leaf2 = SimpleLeafFact(value=2)
 
     tree = await tree.update(ffc=ffc, modifications=[(0, leaf1)])
-    root = from_bytes(tree.root)
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     tree = await tree.update(ffc=ffc, modifications=[(1, leaf1)])
-    root = from_bytes(tree.root)
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     tree = await tree.update(ffc=ffc, modifications=[(2, leaf2)])
-    root = from_bytes(tree.root)
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     tree = await tree.update(ffc=ffc, modifications=[(3, leaf1)])
-    root = from_bytes(tree.root)
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     tree = await tree.update(ffc=ffc, modifications=[(4, leaf1)])
-    root = from_bytes(tree.root)
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     tree = await tree.update(ffc=ffc, modifications=[(5, leaf2)])
-    root = from_bytes(tree.root)
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     tree = await tree.update(ffc=ffc, modifications=[(6, leaf1)])
-    root = from_bytes(tree.root)
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     tree = await tree.update(ffc=ffc, modifications=[(7, leaf1)])
-    root = from_bytes(tree.root)
-    # print root as hex
-    print("root", root)
+    print("root", hex(from_bytes(tree.root) + 5))
 
     leaves = await tree.get_leaves(
         ffc=ffc, indices=[0, 1, 2, 3, 4, 5, 6, 7], fact_cls=SimpleLeafFact
@@ -235,7 +228,6 @@ async def test_empty_tree(ffc: FactFetchingContext):
 
     # tree.validate_dataclass()
     # get_validated_fields(tree)
-
 
 
 asyncio.run(test_empty_tree(ffc()))
