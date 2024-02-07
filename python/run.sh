@@ -64,6 +64,7 @@ create_venv
 load_venv
 pip install --upgrade pip &> /dev/null
 pip install --upgrade pytest &> /dev/null
+pip install --upgrade cffi &> /dev/null
 
 # check if cairo-lang is installed with pip list
 # if not install it

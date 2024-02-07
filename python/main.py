@@ -1,6 +1,6 @@
-# main.py
+import cffi
 
-import binascii
+
 import ctypes
 import os
 import platform
@@ -49,7 +49,7 @@ print(result.decode("utf-8"))
 
 import asyncio
 import random
-from typing import Iterable, Set, Tuple
+from typing import Iterable, List, Set, Tuple
 
 from queue import Queue
 
@@ -136,59 +136,11 @@ def verify_leaves_are_reachable_from_root(
     assert leaves_reached == set(leaf_hashes)
 
 
-# @pytest.mark.asyncio
-# @parametrize_random_object(n_nightly_runs=5)
-# @pytest.mark.parametrize(
-#     "height,n_leaves",
-#     [(2, 2**2), (10, 2**10), (10, 5), (10, 2**10 // 2)],
-#     ids=["full_tree_small", "full_tree_large", "sparse_tree", "dense_tree"],
-# )
-# async def test_update_and_decommit(
-#     random_object: random.Random, ffc: FactFetchingContext, height: int, n_leaves: int
-# ):
-#     """
-#     Builds a Patricia tree using update(), and tests that the facts stored suffice to decommit.
-#     """
-#     print("TOTO")
-#     # assert(False)
-
-#     tree = await PatriciaTree.empty_tree(
-#         ffc=ffc, height=height, leaf_fact=SimpleLeafFact(value=0)
-#     )
-
-#     # Create some random modifications, store the facts and update the tree.
-#     # Note that leaves with value 0 are not modifications (hence, range(1, ...)).
-#     leaves = [
-#         SimpleLeafFact(value=value)
-#         for value in random_object.choices(range(1, 1000), k=n_leaves)
-#     ]
-#     leaf_hashes_bytes = await asyncio.gather(
-#         *(leaf_fact.set_fact(ffc=ffc) for leaf_fact in leaves)
-#     )
-#     leaf_hashes = [from_bytes(leaf_hash_bytes) for leaf_hash_bytes in leaf_hashes_bytes]
-#     indices = random_object.sample(range(2**height), k=n_leaves)
-#     modifications = list(zip(indices, leaves))
-#     preimages: BinaryFactDict = {}
-#     tree = await tree.update(ffc=ffc, modifications=modifications, facts=preimages)
-#     root = from_bytes(tree.root)
-
-#     # Sanity check - the hash of the values should be the keys.
-#     for fact, preimage in preimages.items():
-#         assert (
-#             hash_preimage(preimage=preimage) == fact
-#         ), f"Corrupted preimages: hash of {preimage} is not {fact}."
-
-#     # Verify that the root can be reached using the preimages, from every leaf.
-#     verify_leaves_are_reachable_from_root(
-#         root=root, leaf_hashes=leaf_hashes, preimages=preimages
-#     )
-
-
 async def test_empty_tree(ffc: FactFetchingContext):
     print("TITI")
 
     tree: PatriciaTree = await PatriciaTree.empty_tree(
-        ffc=ffc, height=3, leaf_fact=SimpleLeafFact(value=0)
+        ffc=ffc, height=5, leaf_fact=SimpleLeafFact(value=0)
     )
 
     root = from_bytes(tree.root)
@@ -198,36 +150,55 @@ async def test_empty_tree(ffc: FactFetchingContext):
     leaf2 = SimpleLeafFact(value=2)
 
     tree = await tree.update(ffc=ffc, modifications=[(0, leaf1)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
 
     tree = await tree.update(ffc=ffc, modifications=[(1, leaf1)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
 
     tree = await tree.update(ffc=ffc, modifications=[(2, leaf2)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
 
     tree = await tree.update(ffc=ffc, modifications=[(3, leaf1)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
 
     tree = await tree.update(ffc=ffc, modifications=[(4, leaf1)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
 
     tree = await tree.update(ffc=ffc, modifications=[(5, leaf2)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
 
     tree = await tree.update(ffc=ffc, modifications=[(6, leaf1)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
 
     tree = await tree.update(ffc=ffc, modifications=[(7, leaf1)])
-    print("root", hex(from_bytes(tree.root) + 5))
+    print("root", hex(from_bytes(tree.root)))
+
+    tree = await tree.update(ffc=ffc, modifications=[(8, leaf1)])
+    print("root", hex(from_bytes(tree.root)))
 
     leaves = await tree.get_leaves(
         ffc=ffc, indices=[0, 1, 2, 3, 4, 5, 6, 7], fact_cls=SimpleLeafFact
     )
+    print(tree.height)
     print(leaves)
 
     # tree.validate_dataclass()
     # get_validated_fields(tree)
 
 
-asyncio.run(test_empty_tree(ffc()))
+if __name__ == "__main__":
+    asyncio.run(test_empty_tree(ffc()))
+
+    # get all scenario
+    # tests = [file for file in os.listdir("../scenario") if file.endswith(".yml")]
+
+    # print(tests)
+
+    # ffi = cffi.FFI()
+    # # read the header file into a string
+    # with open("../rust/rust_ffi/bindings.h") as f:
+    #     header = f.read()
+    #     print(header)
+    #     ffi.cdef(header)
+
+    # lib = ffi.dlopen(lib_name)

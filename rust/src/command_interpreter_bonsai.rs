@@ -1,10 +1,8 @@
 use std::ffi::CStr;
 
 use bitvec::vec::BitVec;
-use bonsai_trie::{
-    databases::RocksDB, id::Id, BonsaiStorage, BonsaiStorageError,
-};
-use rust_ffi::{Command, CommandId, ArrayWrapper};
+use bonsai_trie::{databases::RocksDB, id::Id, BonsaiStorage};
+use rust_ffi::{Command, CommandId};
 use starknet_types_core::{felt::Felt, hash::Pedersen};
 
 /// A basic ID type that can be used for testing.
@@ -31,8 +29,7 @@ pub fn run_command<'a>(
             // println!("key_bitvec: {:#?}", key_bitvec);
             let felt = Felt::from_hex(&value).unwrap();
             // println!("felt: {:#?}", felt);
-            bonsai_storage
-                .insert(&key_bitvec, &felt)
+            bonsai_storage.insert(&key_bitvec, &felt)
         }
         CommandId::Remove => {
             let key = command.key();
@@ -64,12 +61,10 @@ pub fn run_command<'a>(
             let value = command.value();
 
             println!("get {:?} {}", key, value);
-            let res = bonsai_storage.get(&BitVec::from_vec(key)).unwrap().unwrap();
+            let res =
+                bonsai_storage.get(&BitVec::from_vec(key)).unwrap().unwrap();
             // println!("res: {:#?}", res);
-            assert_eq!(
-                res,
-                Felt::from_hex(&value).unwrap()
-            );
+            assert_eq!(res, Felt::from_hex(&value).unwrap());
             Ok(())
         }
         CommandId::Contains => {
@@ -90,10 +85,10 @@ pub fn run_command<'a>(
                 .map(|v| v.to_string())
                 .collect::<Vec<String>>();
 
-            println!("get_proof {:?} {}", key, value);
+            println!("command get_proof {:?} {}", key, value);
             let proof =
-            bonsai_storage.get_proof(&BitVec::from_vec(key)).unwrap();
-            println!("proof: {:#?}", proof);
+                bonsai_storage.get_proof(&BitVec::from_vec(key)).unwrap();
+            println!("Bonsai proof: {:#?}", proof);
 
             assert_eq!(v.len(), proof.len());
 
@@ -130,10 +125,7 @@ impl CommandTrait for Command {
 
     fn get_arg1(&self) -> String {
         let arr = unsafe {
-            std::slice::from_raw_parts(
-                self.arg1.ptr as *mut u8,
-                self.arg1.len,
-            )
+            std::slice::from_raw_parts(self.arg1.ptr as *mut u8, self.arg1.len)
         };
 
         String::from_utf8(arr.to_vec()).unwrap()
@@ -145,7 +137,7 @@ impl CommandTrait for Command {
             | CommandId::Insert
             | CommandId::Contains
             | CommandId::Get
-            | CommandId::GetProof =>  {
+            | CommandId::GetProof => {
                 let arr = unsafe {
                     std::slice::from_raw_parts(
                         self.arg1.ptr as *mut u8,
@@ -153,7 +145,7 @@ impl CommandTrait for Command {
                     )
                 };
                 arr.to_vec()
-            },
+            }
             _ => unimplemented!("Command has no key"),
         }
     }
@@ -161,10 +153,7 @@ impl CommandTrait for Command {
     fn id(&self) -> TestId {
         match self.id {
             CommandId::Commit | CommandId::RevertTo => {
-                let id =
-                    self.get_arg1()
-                        .parse::<u64>()
-                        .unwrap();
+                let id = self.get_arg1().parse::<u64>().unwrap();
 
                 TestId(id)
             }
@@ -172,7 +161,7 @@ impl CommandTrait for Command {
         }
     }
 }
-pub fn run_test(
+pub fn run_bonsai_test(
     command_list: &rust_ffi::CommandList,
 
     mut bonsai_storage: BonsaiStorage<TestId, RocksDB<'_, TestId>, Pedersen>,

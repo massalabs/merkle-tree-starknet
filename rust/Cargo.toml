@@ -10,6 +10,11 @@ bonsai-trie = { git = "https://github.com/keep-starknet-strange/bonsai-trie" }
 rust_ffi = { path = "rust_ffi" }
 starknet-types-core = "0.0.7"
 
+pathfinder-merkle-tree = { path = "pathfinder/crates/merkle-tree/" }
+pathfinder-common = { path = "pathfinder/crates/common" }
+pathfinder-crypto = { path = "pathfinder/crates/crypto" }
+pathfinder-storage = { path = "pathfinder/crates/storage" }
+anyhow = "1.0.79"
 
 mp-felt = { git = "https://github.com/keep-starknet-strange/madara.git", rev = "f30acea8af7e28e956e771928130e12bfc084832", package = "mp-felt", features = [
     "parity-scale-codec",
