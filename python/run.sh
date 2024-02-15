@@ -64,7 +64,7 @@ create_venv
 load_venv
 pip install --upgrade pip &> /dev/null
 pip install --upgrade pytest &> /dev/null
-pip install --upgrade cffi &> /dev/null
+pip install --upgrade icecream &> /dev/null
 
 # check if cairo-lang is installed with pip list
 # if not install it
@@ -86,7 +86,8 @@ checkout_cairo_lang_tag "v0.13.0"
 
 # build rust_ffi
 pushd .
-cd ../rust/rust_ffi && cargo build --release && popd
+cd ../rust_ffi && cargo build --release || exit 1
+popd
 
 # run our ts test
 python -m main >result.txt

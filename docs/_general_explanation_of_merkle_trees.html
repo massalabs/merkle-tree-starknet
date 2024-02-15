@@ -437,13 +437,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="book">
+<body id="_general_explanation_of_merkle_trees" class="book toc2 toc-left">
 <div id="header">
 <h1>Merkle trees and their implementations in Starknet</h1>
-<div id="toc" class="toc">
+<div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
-<li><a href="_general_explanation_of_merkle_trees.html">1. General explanation of Merkle trees</a>
+<p><span class="toc-root"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
+<li><a href="_general_explanation_of_merkle_trees.html"><span class="toc-current">1. General explanation of Merkle trees</span></a>
+<ul class="sectlevel2">
+<li><a href="_general_explanation_of_merkle_trees.html#_genealogy">1.1. Genealogy</a>
+</li>
+<li><a href="_general_explanation_of_merkle_trees.html#_patricia_trie">1.2. PATRICIA trie</a>
+</li>
+<li><a href="_general_explanation_of_merkle_trees.html#_merkle_tree">1.3. Merkle tree</a>
+</li>
+<li><a href="_general_explanation_of_merkle_trees.html#_merkle_patricia_trie">1.4. Merkle - Patricia trie</a>
+</li>
+</ul>
 </li>
 <li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">2. Merkle trees uses and peculiarities in Starknet</a>
 </li>
@@ -457,27 +467,92 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="_general_explanation_of_merkle_trees">1. General explanation of Merkle trees</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_genealogy">1.1. Genealogy</h3>
+<div class="sect3">
+<h4 id="_trie">1.1.1. Trie</h4>
+<div class="paragraph">
+<p>A trie, also known as a prefix tree, stands as a tree-based data structure specifically crafted for efficient storage and retrieval of string sets. Unlike conventional methods like arrays or linked lists, tries organize data hierarchically, with each node representing a single character in a string. This unique design renders tries particularly well-suited for tasks involving string matching, prefix searches, and autocomplete functionalities. Notably, strings within a trie share common prefixes, leading to space efficiency, especially when dealing with large collections of similar strings. This remarkable data structure finds applications in diverse domains, including dictionary implementations, spell checkers, and IP routing tables. This introduction serves as a preliminary exploration of the trie data structure, highlighting its unique properties and widespread utilization in efficiently addressing string-related challenges.</p>
+</div>
+<div class="paragraph">
+<p>Note:
+- Prefix and key denote the same concept: They represent the path from the root node to the node they are attached. As such, they are not stored in the node. The position in the tree determines the value of a nodes prefix/key.
+- Only leaf nodes store a value</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-57d1032508bf48028940ad8a5b0021f2.png" alt="Diagram" width="467" height="472">
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_patricia_trie">1.2. PATRICIA trie</h3>
+<div class="paragraph">
+<p>Also know as Radix trie</p>
+</div>
+<div class="paragraph">
+<p>Patricia tries are a compact form of tries. This is accomplished by fusing the nodes that have only one child.
+As in tries, prefix/key denote the same concept.
+Contrary to regular tries where the position of a node implicitly represents its prefix or key, in Patricia tries, due to node fusion, "fused nodes" need to store additional information about what they represent. This representation includes details about the characters or paths that are fused together to form the node. This ensures that even though nodes are merged for compactness, the trie can still accurately represent and retrieve the original keys or prefixes associated with each node.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-2f4c8bf4d933afcd7388d9c9b509462e.png" alt="Diagram" width="784" height="563">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_merkle_tree">1.3. Merkle tree</h3>
+<div class="paragraph">
+<p>A Merkle Tree is a specialized tree where every "leaf" or node is labeled with the cryptographic hash of a data block. Conversely, every non-leaf node, often referred to as a branch, inner node, or inode, carries the cryptographic hash of its child nodes' labels. This design enables efficient verification of large data sets by validating only a small portion of the tree, known as a Merkle proof. In decentralized systems, Merkle trees are used to ensure the integrity of data stored across multiple nodes without the need for a trusted central authority. The proof size is logarithmic in the number of elements in the tree.</p>
+</div>
+<div class="paragraph">
+<p>Following is a visual representation of a Merkle tree:</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-1187ae845d6b10878066e0ecafa0a14b.png" alt="Diagram" width="668" height="438">
+</div>
+</div>
+<div class="paragraph">
+<p>In this depiction, hashes 0-0 and 0-1 represent the hash values of data blocks L1 and L2, respectively. Meanwhile, hash 0 is derived from the combined hashes 0-0 and 0-1.</p>
+</div>
+<div class="paragraph">
+<p>For comprehensive information on the Merkle Tree, <a href="https://en.wikipedia.org/wiki/Merkle_tree">visit here</a>. The benefits of the Merkle Tree data structure are outlined <a href="https://www.geeksforgeeks.org/blockchain-merkle-trees/#Advantages%20of%20Merkle%20Tree:~:text=longest%2C%20valid%20blockchain.-,Advantages%20of%20Merkle%20Tree,-Efficient%20verification%3A">here</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_merkle_patricia_trie">1.4. Merkle - Patricia trie</h3>
+<div class="paragraph">
+<p>A Merkle-Patricia Trie (MPT) is a combination of a Merkle Tree and a Patricia Tree. This data structure is famous because it is being used by Ethereum to store the state of an Ethereum blockchain. The Ethereum version of the MPT is composed of 3 types of nodes:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a></p>
+<p><code>Branch</code>: A node with up to 16 child links, each corresponding to a hex character.</p>
 </li>
 <li>
-<p><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">Merkle trees uses and peculiarities in Starknet</a></p>
+<p><code>Extension</code>: A node storing a key segment with a common prefix and a link to the next node.</p>
 </li>
 <li>
-<p><a href="_introduction_to_the_different_implementations.html">Introduction to the different implementations</a></p>
-</li>
-<li>
-<p><a href="_testing_implementations.html">Testing implementations</a></p>
-</li>
-<li>
-<p><a href="_annexes.html">Annexes</a></p>
+<p><code>Leaf</code>: An end-node holding the key’s final segment and its value.</p>
 </li>
 </ul>
 </div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-34f9ce1227d13f69692f1678eb7153fe.png" alt="Diagram" width="784" height="885">
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a> →</p>
+<p>↑ Up: <a href="index.html">Merkle trees and their implementations in Starknet</a> | Next: <a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">Merkle trees uses and peculiarities in Starknet</a> →</p>
 </div>
 </div>
 <div id="footer">

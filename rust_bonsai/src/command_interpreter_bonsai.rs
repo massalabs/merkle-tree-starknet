@@ -1,7 +1,14 @@
 use std::ffi::CStr;
 
-use bitvec::vec::BitVec;
-use bonsai_trie::{databases::RocksDB, id::Id, id::{BasicIdBuilder, BasicId}, BonsaiStorage};
+use bitvec::prelude::*;
+
+use bitvec::{order::Msb0, vec::BitVec};
+use bonsai_trie::{
+    databases::RocksDB,
+    id::Id,
+    id::{BasicId, BasicIdBuilder},
+    BonsaiStorage,
+};
 use rust_ffi::{Command, CommandId};
 use starknet_types_core::{felt::Felt, hash::Pedersen};
 
@@ -15,6 +22,17 @@ impl Id for TestId {
     }
 }
 
+fn extend_key_251(key: BitVec<u8, Msb0>) -> BitVec<u8, Msb0> {
+    //
+    // let key: BitVec<u8, Msb0> = BitVec::from_vec(val.to_be_bytes().to_vec());
+
+    let mut key251: BitVec<u8, Msb0> = bitvec![u8, Msb0; 0; 251];
+    key251.truncate(key251.len() - key.len());
+
+    key251.extend(key.iter());
+    // println!("{:?}", &key251);
+    key251
+}
 
 pub fn run_command<'a>(
     command: &Command,
@@ -28,17 +46,22 @@ pub fn run_command<'a>(
 
             println!("insert {:?} {}", key, value);
             let key_bitvec = BitVec::from_vec(key);
-            println!("key_bitvec: {:#?}", key_bitvec);
+            let key_bitvec = extend_key_251(key_bitvec);
+
+            // println!("key_bitvec: {:#?}", key_bitvec);
             let felt = Felt::from_hex(&value).unwrap();
-            println!("felt: {:#?}", felt);
+            // println!("felt: {:#?}", felt);
             bonsai_storage.insert(&key_bitvec, &felt).unwrap();
             bonsai_storage.commit(id_builder.new_id())
-            // Ok(())
         }
         CommandId::Remove => {
             let key = command.key();
             println!("remove {:?}", key);
-            bonsai_storage.remove(&BitVec::from_vec(key)).unwrap();
+
+            let key_bitvec = BitVec::from_vec(key);
+            let key_bitvec = extend_key_251(key_bitvec);
+
+            bonsai_storage.remove(&key_bitvec).unwrap();
             bonsai_storage.commit(id_builder.new_id())
         }
 
@@ -46,8 +69,7 @@ pub fn run_command<'a>(
             let hash = bonsai_storage.root_hash().unwrap().to_hex_string();
             let ref_root_hash = command.value();
             assert_eq!(&hash, &ref_root_hash);
-            println!("root: {:#?}", hash);
-            println!("ref_root_hash: {:#?}", ref_root_hash);
+            println!("CheckRootHash: {:#?}", ref_root_hash);
 
             Ok(())
         }
@@ -56,8 +78,10 @@ pub fn run_command<'a>(
             let value = command.value();
 
             println!("get {:?} {}", key, value);
-            let res =
-                bonsai_storage.get(&BitVec::from_vec(key)).unwrap().unwrap();
+            let key_bitvec = BitVec::from_vec(key);
+            let key_bitvec = extend_key_251(key_bitvec);
+
+            let res = bonsai_storage.get(&key_bitvec).unwrap().unwrap();
             // println!("res: {:#?}", res);
             assert_eq!(res, Felt::from_hex(&value).unwrap());
             Ok(())
@@ -67,7 +91,10 @@ pub fn run_command<'a>(
             let value = command.value();
 
             println!("contains {:?} {}", key, value);
-            let res = bonsai_storage.contains(&BitVec::from_vec(key)).unwrap();
+            let key_bitvec = BitVec::from_vec(key);
+            let key_bitvec = extend_key_251(key_bitvec);
+
+            let res = bonsai_storage.contains(&key_bitvec).unwrap();
             assert_eq!(res, value.parse::<bool>().unwrap());
             Ok(())
         }

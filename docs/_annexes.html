@@ -437,12 +437,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="book">
+<body id="_annexes" class="book toc2 toc-left">
 <div id="header">
 <h1>Merkle trees and their implementations in Starknet</h1>
-<div id="toc" class="toc">
+<div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
 <li><a href="_general_explanation_of_merkle_trees.html">1. General explanation of Merkle trees</a>
 </li>
 <li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">2. Merkle trees uses and peculiarities in Starknet</a>
@@ -451,33 +451,199 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="_testing_implementations.html">4. Testing implementations</a>
 </li>
-<li><a href="_annexes.html">5. Annexes</a>
+<li><a href="_annexes.html"><span class="toc-current">5. Annexes</span></a>
+<ul class="sectlevel2">
+<li><a href="_annexes.html#_evolution_of_a_binary_pmt_upon_data_insertion">5.1. Evolution of a binary PMT upon data insertion</a>
+</li>
+<li><a href="_annexes.html#_resources">5.2. Resources</a>
+</li>
+</ul>
 </li>
 </ul>
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="_annexes">5. Annexes</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_evolution_of_a_binary_pmt_upon_data_insertion">5.1. Evolution of a binary PMT upon data insertion</h3>
+<div class="paragraph">
+<p>In order to better understand how bonsai trie work, below are represented the different state of a trie while data are inserted.</p>
+</div>
+<div class="paragraph">
+<p>The different kind of nodes in the trie are represented according to:</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-94cd2e8480593233f8964bd5e914d935.png" alt="Diagram" width="300px" height="93">
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>In the following, node labels e.g. <code>n3</code>, <code>n4</code> are used to identify nodes and their evolution in the graph.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+<div class="paragraph">
+<p>Upon insertion of the value <code>0x1</code> at key <code>1</code>, the trie is composed of root node (of type EdgeNode) with one child (of type LeafNode).
+The key to reach the value <code>0x1</code> is encoded in the <code>path</code> contained in the root node.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-b918693306299198f5becea850e1c556.png" alt="Diagram" width="248" height="322">
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><code>init</code> is virtual state symbolizing an empty trie.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+<div class="paragraph">
+<p>Upon insertion of the value <code>0x2</code> at key <code>2</code>, the trie reorganize itself as shown.
+As two keys (<code>[0,0,0,0,0,0,1,0]</code> and <code>[0,0,0,0,0,0,0,1]</code>) have now to be encoded:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a></p>
+<p>the <code>path</code> of the root node is truncated to the common part of the two keys <code>[0,0,0,0,0,0]</code>.</p>
 </li>
 <li>
-<p><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">Merkle trees uses and peculiarities in Starknet</a></p>
+<p>a binary node is inserted as the child of the root node. Each link to its children encode implicitly a part on the key, left for <code>0</code> right for <code>1</code>. Hence on the right path  <code>[0,0,0,0,0,0,0]</code> is represented and <code>[0,0,0,0,0,0,1]</code> on the left.</p>
 </li>
 <li>
-<p><a href="_introduction_to_the_different_implementations.html">Introduction to the different implementations</a></p>
-</li>
-<li>
-<p><a href="_testing_implementations.html">Testing implementations</a></p>
-</li>
-<li>
-<p><a href="_annexes.html">Annexes</a></p>
+<p>in order to encode the last bit of each key, an edge node with the appropriate <code>path</code> is inserted on both paths. As the keys are fully encoded at this step, both edge nodes have the corresponding leaf node as child.</p>
 </li>
 </ul>
 </div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-9203d190098fa70f6ecc20bec6fb5efb.png" alt="Diagram" width="313" height="524">
+</div>
+</div>
+<hr>
+<div class="paragraph">
+<p>Upon insertion of the value <code>0x3</code> at key <code>3</code>, the trie reorganize again. The reorganization happens only to the subtree where new path have to be encoded. Hence the right child of the node <code>n4</code> is transformed into a binary node and the same reorganizations has explained above apply.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-6291fadb8fd513ea2f2e07ca3019acb8.png" alt="Diagram" width="392" height="542">
+</div>
+</div>
+<hr>
+<div class="paragraph">
+<p>Upon insertion of the value <code>0x4</code> at key <code>4</code>, the trie reorganize itself as explained above.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-be04b5ff2470356111993a777b0d4bd4.png" alt="Diagram" width="443" height="663">
+</div>
+</div>
+<hr>
+<div class="paragraph">
+<p>The same kind of reorganizations apply upon insertion of the value <code>0x5</code> at key <code>5</code>.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="diag-mermaid-md5-70a16e0b444653d2fee21596fc955877.png" alt="Diagram" width="592" height="661">
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+upon keys removal "inverse" transformations apply.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_resources">5.2. Resources</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/keep-starknet-strange/bonsai-trie" class="bare">https://github.com/keep-starknet-strange/bonsai-trie</a></p>
+</li>
+<li>
+<p><a href="https://github.com/keep-starknet-strange/bonsai-trie/blob/oss/src/trie/merkle_tree.rs" class="bare">https://github.com/keep-starknet-strange/bonsai-trie/blob/oss/src/trie/merkle_tree.rs</a></p>
+</li>
+<li>
+<p><a href="https://hackmd.io/@kt2am/BktBblIL3" class="bare">https://hackmd.io/@kt2am/BktBblIL3</a></p>
+</li>
+<li>
+<p><a href="https://ethereum.stackexchange.com/questions/268/ethereum-block-architecture/6413#6413" class="bare">https://ethereum.stackexchange.com/questions/268/ethereum-block-architecture/6413#6413</a></p>
+</li>
+<li>
+<p><a href="https://github.com/keep-starknet-strange/madara" class="bare">https://github.com/keep-starknet-strange/madara</a></p>
+</li>
+<li>
+<p><a href="https://github.com/lambdaclass/merkle_patricia_tree" class="bare">https://github.com/lambdaclass/merkle_patricia_tree</a></p>
+</li>
+<li>
+<p><a href="https://github.com/massalabs/madara-bonsai/blob/main/documentation/specification.html" class="bare">https://github.com/massalabs/madara-bonsai/blob/main/documentation/specification.html</a> (remove the link to the css to fix the display)</p>
+</li>
+<li>
+<p><a href="https://github.com/massalabs/madara-bonsai/blob/d86abde7b0d5d0eb0503104ff69ace53e0b33ff9/documentation/specification.pdf" class="bare">https://github.com/massalabs/madara-bonsai/blob/d86abde7b0d5d0eb0503104ff69ace53e0b33ff9/documentation/specification.pdf</a></p>
+</li>
+<li>
+<p><a href="https://github.com/massalabs/madara-bonsai/blob/d86abde7b0d5d0eb0503104ff69ace53e0b33ff9/documentation/specification.pdf" class="bare">https://github.com/massalabs/madara-bonsai/blob/d86abde7b0d5d0eb0503104ff69ace53e0b33ff9/documentation/specification.pdf</a></p>
+<div class="literalblock">
+<div class="content">
+<pre>https://docs.alchemy.com/docs/patricia-merkle-tries</pre>
+</div>
+</div>
+</li>
+<li>
+<p>starknet docs : <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#merkle_patricia_trie" class="bare">https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#merkle_patricia_trie</a></p>
+</li>
+<li>
+<p>starknet book : <a href="https://book.starknet.io/" class="bare">https://book.starknet.io/</a></p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="_hyperledger_besu_java">5.2.1. <a href="https://github.com/hyperledger/besu/tree/1a7635bc3ef75c31e5c5ac050b2cd3a22d833ada/ethereum/core/src/main/java/org/hyperledger/besu/ethereum/bonsai">Hyperledger - Besu - Java</a></h4>
+<div class="paragraph">
+<p>Similar data structure, for reference</p>
+</div>
+<div class="paragraph">
+<p>Hyperledger besu implementation</p>
+</div>
+<div class="paragraph">
+<p>Bonsai Tries is a data storage layout policy designed to reduce storage requirements and increase read performance.</p>
+</div>
+<div class="paragraph">
+<p>Bonsai stores leaf values in a trie log, separate from the branches of the trie. Bonsai stores nodes by the location of the node instead of the hash of the node. Bonsai can access the leaf from the underlying storage directly using the account key. This greatly reduces the disk space needed for storage and allows for less resource-demanding and faster read performance. Bonsai inherently prunes orphaned nodes and old branches.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a> →</p>
+<p>← Previous: <a href="_testing_implementations.html">Testing implementations</a> | ↑ Up: <a href="index.html">Merkle trees and their implementations in Starknet</a></p>
 </div>
 </div>
 <div id="footer">

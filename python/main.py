@@ -1,26 +1,7 @@
 import ctypes
 import os
 import platform
-
-from command_interpreter import CommandInterpreter
-
-def load_rust_library() -> ctypes.CDLL:
-    # Determine library extension based on your OS.
-    lib_suffix = ""
-    if platform.system() == "Windows":
-        lib_suffix = "dll"
-    elif platform.system() == "Darwin":
-        lib_suffix = "dylib"
-    else:
-        lib_suffix = "so"
-
-    lib_name = f"../rust/rust_ffi/target/debug/librust_ffi.{lib_suffix}"
-
-    # Load the shared library
-    rust_lib = ctypes.CDLL(lib_name)
-
-    return rust_lib
-
+from icecream import ic
 
 # # Define the result type and argument types of the function `add`
 # rust_lib.add.restype = ctypes.c_int
@@ -84,8 +65,12 @@ from starkware.storage.storage_utils import SimpleLeafFact
 from storage.test_utils import MockStorage
 
 
+from command_interpreter import CommandInterpreter
+from bindings import Command, ArrayWrapper, CommandList, load_rust_library
+
+
 # @pytest.fixture
-def ffc() -> FactFetchingContext:
+def generate_ffc() -> FactFetchingContext:
     return FactFetchingContext(storage=MockStorage(), hash_func=pedersen_hash_func)
 
 
@@ -144,9 +129,7 @@ def print_tree(tree: PatriciaTree):
 
 
 async def test_empty_tree(ffc: FactFetchingContext):
-    tree: PatriciaTree = await PatriciaTree.empty_tree(
-        ffc=ffc, height=251, leaf_fact=SimpleLeafFact(value=0)
-    )
+    tree = await instantiate_tree(ffc)
 
     # root = from_bytes(tree.root)
     # print("root", root)
@@ -197,20 +180,57 @@ async def test_empty_tree(ffc: FactFetchingContext):
     # get_validated_fields(tree)
 
 
-if __name__ == "__main__":
-    # asyncio.run(test_empty_tree(ffc()))
+async def instantiate_tree(ffc: FactFetchingContext) -> PatriciaTree:
+    tree: PatriciaTree = await PatriciaTree.empty_tree(
+        ffc=ffc, height=251, leaf_fact=SimpleLeafFact(value=0)
+    )
 
+    return tree
+
+
+async def run_test(test_path: str):
+    ic(test_path)
+    lib = load_rust_library()
+    interpreter = CommandInterpreter(lib)
+    ffc = generate_ffc()
+    tree: PatriciaTree = await instantiate_tree(ffc)
+
+    # move to bindings.py
+    lib.load_scenario.argtypes = [ctypes.c_char_p]
+    lib.load_scenario.restype = CommandList
+
+    new_var: bytes = test_path.encode("utf-8")
+    commands: CommandList = lib.load_scenario(new_var)
+
+    vec_cmd = [commands.test_commands[i] for i in range(commands.len)]
+
+    for cmd in vec_cmd:
+        tree = await interpreter.run_command(ffc, cmd, tree)
+
+
+async def test_empty_tree2(ffc: FactFetchingContext):
+    tree = await instantiate_tree(ffc)
+
+    leaf1 = SimpleLeafFact(value=1)
+
+    tree = await tree.update(ffc=ffc, modifications=[(1, leaf1)])
+    print("root", hex(from_bytes(tree.root)))
+
+    tree = await tree.update(ffc=ffc, modifications=[(2, leaf1)])
+    print("root", hex(from_bytes(tree.root)))
+
+
+def main():
     # get all scenario
     tests = [file for file in os.listdir("../scenario") if file.endswith(".yml")]
-
-    print(tests)
-
-    interpreter = CommandInterpreter(load_rust_library())
+    tests = ["1.yml", "4.yml"]
+    # print(tests)
 
     for test in tests:
         print(f"Running test {test}")
-        with open(f"../scenario/{test}", "r") as f:
-            
-            print(f.read())
-            interpreter.run_command("test", f"../scenario/{test}")
-        break
+        asyncio.run(run_test(f"../scenario/{test}"))
+
+
+if __name__ == "__main__":
+    # asyncio.run(test_empty_tree(ffc()))
+    main()

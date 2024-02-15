@@ -1,12 +1,10 @@
-rust/rust_ffi/target
-rust_ffi/target
-rust/target
+**/target
+**/rocksdb*
 zig/zig-cache
 c/main.dSYM
 result.txt
 main
 .idea
-rust/rocksdb*
 .vscode
 bindings.h
 managed_context/

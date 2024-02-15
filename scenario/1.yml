@@ -1,29 +1,26 @@
 commands:
   - action: insert
-    arg1: [1, 2, 1]
-    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
-  - action: commit
-    arg1: "1"
-  - action: get
-    arg1: [1, 2, 1]
-    arg2: "0x66342762FDD54D033c195fec3ce2568b62052e"
-  - action: contains
-    arg1: [1, 2, 1]
-    arg2: "true"
+    arg1: [1]
+    arg2: "0x1"
 
   - action: check_root_hash
-    arg1: "0x1a27757437437e6405a77e3b6fa4ac6fd9051d718bf3793e1e96177827ba4ad"
-  - action: insert
-    arg1: [1, 2, 2]
-    arg2: "0x66342762FD54D033c195fec3ce2568b62052e"
-  - action: commit
-    arg1: "2"
-  - action: check_root_hash
-    arg1: "0x1f939088618293ab18272e09ec75a6897dff4f9fd1f92a134fda90e0ea360f4"
-  - action: revert_to
-    arg1: "1"
-  - action: check_root_hash
-    arg1: "0x1a27757437437e6405a77e3b6fa4ac6fd9051d718bf3793e1e96177827ba4ad"
+    arg1: "0x2ebbd6878f81e49560ae863bd4ef327a417037bf57b63a016130ad0a94c8fa7"
+
+  - action: get
+    arg1: [1]
+    arg2: "0x1"
+
   - action: contains
-    arg1: [1, 2, 1]
-    arg2: "false" # should be true
+    arg1: [1]
+    arg2: "true"
+
+  - action: insert
+    arg1: [2]
+    arg2: "0x1"
+
+  - action: check_root_hash
+    arg1: "0x2e7fce0ca3e8cb3b7bf04cbf9d1a187f6103bf53851dc5f59d5aabe8a3207f5"
+
+  - action: contains
+    arg1: [1]
+    arg2: "true" # should be true

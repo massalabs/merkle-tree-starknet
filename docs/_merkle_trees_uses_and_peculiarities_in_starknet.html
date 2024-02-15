@@ -432,20 +432,204 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 #footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
+<style>
+pre.rouge table td { padding: 5px; }
+pre.rouge table pre { margin: 0; }
+pre.rouge, pre.rouge .w {
+  color: #bbbbbb;
+  background-color: #000;
+}
+pre.rouge .c, pre.rouge .ch, pre.rouge .cd, pre.rouge .cm, pre.rouge .cpf, pre.rouge .c1 {
+  color: #888;
+}
+pre.rouge .cp {
+  color: #579;
+}
+pre.rouge .cs {
+  color: #cc0000;
+  font-weight: bold;
+}
+pre.rouge .k, pre.rouge .kc, pre.rouge .kd, pre.rouge .kn, pre.rouge .kr, pre.rouge .kv {
+  color: #080;
+  font-weight: bold;
+}
+pre.rouge .kp {
+  color: #038;
+}
+pre.rouge .kt {
+  color: #339;
+}
+pre.rouge .o {
+  color: #333;
+}
+pre.rouge .ow {
+  color: #000;
+  font-weight: bold;
+}
+pre.rouge .nb, pre.rouge .bp {
+  color: #007020;
+}
+pre.rouge .nf, pre.rouge .fm {
+  color: #06B;
+  font-weight: bold;
+}
+pre.rouge .nc {
+  color: #B06;
+  font-weight: bold;
+}
+pre.rouge .nn {
+  color: #0e84b5;
+  font-weight: bold;
+}
+pre.rouge .ne {
+  color: #F00;
+  font-weight: bold;
+}
+pre.rouge .nv, pre.rouge .vm {
+  color: #963;
+}
+pre.rouge .vi {
+  color: #33B;
+}
+pre.rouge .vc {
+  color: #369;
+}
+pre.rouge .vg {
+  color: #d70;
+  font-weight: bold;
+}
+pre.rouge .no {
+  color: #036;
+  font-weight: bold;
+}
+pre.rouge .nl {
+  color: #970;
+  font-weight: bold;
+}
+pre.rouge .ni {
+  color: #800;
+  font-weight: bold;
+}
+pre.rouge .na {
+  color: #00C;
+}
+pre.rouge .nt {
+  color: #070;
+}
+pre.rouge .nd {
+  color: #555;
+  font-weight: bold;
+}
+pre.rouge .s, pre.rouge .sb, pre.rouge .dl, pre.rouge .s2, pre.rouge .sh, pre.rouge .s1 {
+  background-color: #fff0f0;
+}
+pre.rouge .sa {
+  color: #080;
+  font-weight: bold;
+}
+pre.rouge .sc {
+  color: #04D;
+}
+pre.rouge .sd {
+  color: #D42;
+}
+pre.rouge .si {
+  background-color: #eee;
+}
+pre.rouge .se {
+  color: #666;
+  font-weight: bold;
+}
+pre.rouge .sr {
+  color: #000;
+  background-color: #fff0ff;
+}
+pre.rouge .ss {
+  color: #A60;
+}
+pre.rouge .sx {
+  color: #D20;
+}
+pre.rouge .m, pre.rouge .mb, pre.rouge .mx {
+  color: #60E;
+  font-weight: bold;
+}
+pre.rouge .mi, pre.rouge .il {
+  color: #00D;
+  font-weight: bold;
+}
+pre.rouge .mf {
+  color: #60E;
+  font-weight: bold;
+}
+pre.rouge .mh {
+  color: #058;
+  font-weight: bold;
+}
+pre.rouge .mo {
+  color: #40E;
+  font-weight: bold;
+}
+pre.rouge .gh {
+  color: #000080;
+  font-weight: bold;
+}
+pre.rouge .gu {
+  color: #800080;
+  font-weight: bold;
+}
+pre.rouge .gd {
+  color: #A00000;
+}
+pre.rouge .gi {
+  color: #00A000;
+}
+pre.rouge .gr {
+  color: #FF0000;
+}
+pre.rouge .ge {
+  font-style: italic;
+}
+pre.rouge .gs {
+  font-weight: bold;
+}
+pre.rouge .gp {
+  color: #c65d09;
+  font-weight: bold;
+}
+pre.rouge .go {
+  color: #888;
+}
+pre.rouge .gt {
+  color: #04D;
+}
+pre.rouge .err {
+  color: #F00;
+  background-color: #FAA;
+}
+</style>
 <style>.toc-current{font-weight: bold;} .toc-root{font-family: "Open Sans","DejaVu Sans",sans-serif;
                        font-size: 0.9em;} #content{display: flex; flex-direction: column; flex: 1 1 auto;}
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="book">
+<body id="_merkle_trees_uses_and_peculiarities_in_starknet" class="book toc2 toc-left">
 <div id="header">
 <h1>Merkle trees and their implementations in Starknet</h1>
-<div id="toc" class="toc">
+<div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
 <li><a href="_general_explanation_of_merkle_trees.html">1. General explanation of Merkle trees</a>
 </li>
-<li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">2. Merkle trees uses and peculiarities in Starknet</a>
+<li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html"><span class="toc-current">2. Merkle trees uses and peculiarities in Starknet</span></a>
+<ul class="sectlevel2">
+<li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html#_about_nodes">2.1. About Nodes<br></a>
+</li>
+<li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html#_state_commitment">2.2. State commitment</a>
+</li>
+<li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html#_the_contract_trie">2.3. The contract trie</a>
+</li>
+</ul>
 </li>
 <li><a href="_introduction_to_the_different_implementations.html">3. Introduction to the different implementations</a>
 </li>
@@ -457,27 +641,128 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="_merkle_trees_uses_and_peculiarities_in_starknet">2. Merkle trees uses and peculiarities in Starknet</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In Starknet, Merkle trees serve as the backbone for organizing and securing the state of smart contracts and transactions.
+By utilizing custom Binary Merkle-Patricia Trees of height 251, Starknet optimizes state storage and retrieval, enabling efficient execution.<br>
+From an external perspective the tree is similar to a key-value store, where both key
+and value are <a href="https://github.com/eqlabs/pathfinder/blob/ca33e54079bdce288806daa5f8de58d7863a2c4a/crates/crypto/src/algebra/field/felt.rs#L14">Felt</a>.</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a></p>
-</li>
-<li>
-<p><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">Merkle trees uses and peculiarities in Starknet</a></p>
-</li>
-<li>
-<p><a href="_introduction_to_the_different_implementations.html">Introduction to the different implementations</a></p>
-</li>
-<li>
-<p><a href="_testing_implementations.html">Testing implementations</a></p>
-</li>
-<li>
-<p><a href="_annexes.html">Annexes</a></p>
+<p><a href="https://github.com/eqlabs/pathfinder/blob/ca33e54079bdce288806daa5f8de58d7863a2c4a/crates/crypto/src/algebra/field/felt.rs#L14">Felt</a> : a field element is a number 0..p-1 with p=2<sup>{251}+17*2</sup>{192}+1, and it forms the basic building block of most Starknet interactions.</p>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>Refer to <a href="_annexes.html#_evolution_of_a_binary_pmt_upon_data_insertion">Evolution of a binary PMT upon data insertion</a> for more details.</p>
+</div>
+<div class="sect2">
+<h3 id="_about_nodes">2.1. About Nodes<br></h3>
+<div class="paragraph">
+<p>Each node in the trie is represented by a triplet (length, path, value), where:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>path</code>: is the path from the current node to its unique non-empty subtrie.</p>
+</li>
+<li>
+<p><code>len</code>: the length of the path, measured in nodes.</p>
+</li>
+<li>
+<p><code>value</code>: is the value of the node, which can be either data, or the hash of two non-empty child nodes..</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>An empty node is one whose triplet values are (0,0,0)
+. Leaf nodes and internal nodes can be empty. A subtrie rooted at a node (𝑙𝑒𝑛𝑔𝑡ℎ,𝑝𝑎𝑡ℎ,𝑣𝑎𝑙𝑢𝑒)
+ has a single non-empty subtrie, rooted at the node obtained by following the path specified by 𝑝𝑎𝑡ℎ
+.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_state_commitment">2.2. <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#state_commitment">State commitment</a></h3>
+<div class="literalblock">
+<div class="content">
+<pre>The state commitment is a digest that represents the state. In Starknet, the state commitment combines the roots of two binary Merkle-Patricia tries of height 251 in the following manner:</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code>state_commitment = hPos(
+    "STARKNET_STATE_V0",
+    contract_trie_root,
+    class_trie_root
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Where:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>hPos</code> is the <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/hash-functions/#poseidon_hash">Poseidon</a> hash function.</p>
+</li>
+<li>
+<p><code>STARKNET_STATE_V0</code> is a constant prefix string encoded in ASCII (and represented as a field element).</p>
+</li>
+<li>
+<p><code>contract_trie_root</code> is the root of the <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#contracts_trie">contract trie</a>, a Merkle-Patricia trie whose leaves are the contracts' states.</p>
+</li>
+<li>
+<p><code>class_trie_root</code> is the root of the <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#classes_trie">class trie</a>, a Merkle-Patricia trie whose leaves are the <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/class-hash/">compiled class hashes</a>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_contract_trie">2.3. <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#contracts_trie">The contract trie</a></h3>
+<div class="paragraph">
+<p>As with Ethereum, this trie is a two-level structure, whose leaves correspond to distinct contracts. The address of each contract determines the path from the trie’s root to its corresponding leaf, whose content encodes the contract’s state.</p>
+</div>
+<div class="paragraph">
+<p>The information stored in the leaf is as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code>hPed(
+    class_hash,
+    storage_root,
+    nonce,
+    0
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Where:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>hPed</code> is the <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/hash-functions/#pedersen_hash">Pedersen</a> hash function.</p>
+</li>
+<li>
+<p><code>class_hash</code> is the hash of the <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/class-hash/">contract’s definition</a>.</p>
+</li>
+<li>
+<p><code>storage_root</code> is the root of another Merkle-Patricia trie of height 251 that is constructed from the contract’s storage.</p>
+</li>
+<li>
+<p><code>nonce</code> is the current nonce of the contract.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a> →</p>
+<p>← Previous: <a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a> | ↑ Up: <a href="index.html">Merkle trees and their implementations in Starknet</a> | Next: <a href="_introduction_to_the_different_implementations.html">Introduction to the different implementations</a> →</p>
 </div>
 </div>
 <div id="footer">

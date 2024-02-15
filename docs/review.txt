@@ -1,0 +1,93 @@
+in 1.3 “A Merkle Tree is a specialized tree where every “leaf node” is labeled with the cryptographic hash of a data block.” not sure what “or node” does that. Every leaf is labeled, but not every node. Do you mean every “leaf node”?
+- Should discuss with Aurelien (comes from his pdf)
+-> replace by "leaf node"
+- DONE
+
+we need an index either at the top of the page or in a menu on the left side, that allows for rapid navigation between sections of this doc
+- TODO SUMMARY
+- Need to fix page deployment
+- DONE
+
+in 2. “enabling efficient execution of Ethereum-compatible smart contracts”, starknet smart contracts are not ethereum compatible. I’m not sure what you are referring to here
+- CHATGPT >< |
+- reworked, DONE
+
+in 2. “where both key and value are [Felts](Felt).“, I think a link is supposed to be here
+- DONE
+
+in 2. “These items can encompass various types of data, including integers, strings, booleans, and more complex structures like arrays and maps.“. Felt cannot “encompas” array and maps. They can be used “stacked up” or “assemble” together to build those structs. But they don’t “encompas” them.
+- CHATGPT >< |
+- Done , reworked
+
+in 2. “he use of Felt items ensures uniformity and efficiency in data handling across smart contracts and transactions. Felt items are optimized for storage and retrieval within Starknet’s Merkle trees, enabling efficient execution of Ethereum-compatible smart contracts while maintaining data integrity and security.” Not really. They are just a requirement in order to be able to prove any computation with Stark. Also, still not Ethereum compatible :clin_d'œil:
+- CHATGPT >< |
+- Done , reworked
+
+in 2.1 “contract_trie_root is the root of the contract trie, a Merkle-Patricia trie whose leaves are the contracts’ states.” the leaves are the hashes of the tries of the state of the contracts. Is it an intentional simplification in order to go back to it more precisely later?
+- comes from https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/
+- Added "Contract trie" part of the doc   (2.2)                                                                                                                                                          #state_commitment
+
+in 2.1 “class_trie_root is the root of the class trie, a Merkle-Patricia trie whose leaves are the compiled class hashes.” just the class hashes. I starknet “compiled classes” are .casm files, and classes hashes are .sierra. In the future it will be only the .sierra ones, but for now we live with both. So let’s not be overly precise there.
+- from https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/                                                                                                                                                                                                                                          #state_commitment
+- Should we duplicate all of their documentation ???
+- Added a link to the documentation for compiled class hashes
+
+
+in 3.1, does pathfinder really delete old nodes? I though one of the problem they were dealing with was a super huge storage because they keep all the nodes of all the state of all the past blocks
+l'implem fait que l'on ne peux pas delete
+- HELP
+
+
+in 3.1.1 “all keys are [Felts](Felt)” liink missing
+- from https://github.com/eqlabs/pathfinder/blob/main/crates/merkle-tree/src/tree.rs
+- Done (link update)
+
+3.1.2 “Starknet have defined an additional node type, an Unresolved node" , Starknet or Pathfinder did? It sound more like an implementation details, so it should be pathfinder here.
+- DONE Misstake from https://github.com/eqlabs/pathfinder/blob/main/crates/merkle-tree/src/tree.rs
+
+3.1.2 “The in-memory tree is built using a graph of `Rc<RefCell<Node>>` which is a bit painful.“, is it was you are looking for?
+- comment from the doc https://github.com/eqlabs/pathfinder/blob/ca33e54079bdce288806daa5f8de58d7863a2c4a/crates/merkle-tree/src/tree.rs #L45
+- what to do ?
+
+
+3.1.2 “Pathfinder is the first Starknet full node implementation.“, war with all the other implentations?
+- from doc https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/on-chain-data/ #extract_from_ethereum , PEACE !
+- what to do ?
+
+
+3.2 The state trie [specification] describes a sparse Merkle Trie.” say it a the very beginin and explain it more. It can be a little subsection. It is the defining factor of juno. Explain sparse vs dense.
+- explanation of sparse vs dense has been added
+
+
+3.2 Also juno doesn’t keep record of the past states meaning they use waaaaaaaaaay less storage that Pathfinder, but can only answer calls about the chain head state.
+- Comparaison has been update but we need to ask the team to confirm
+
+3.2 why is there a “terminology” section here. It doesn’t look related to Juno
+- DONE moved to part 3
+
+3.3 “the update function does not compute and store the new facts while traversing the \ tree.” there is a forgoten `/` in the middle of the sentence
+- DONE
+
+3.3 “Used by ContractState and the Starknet OS run in the GpsAmbassador” nobody has any idea what those things are. Say it is used in production by the Starknet mainnet and testnets.
+- maybe an error but from https://github.com/starkware-libs/cairo-lang/blob/caba294d82eeeccc3d86a158adb8ba209bf2d8fc/src/starkware/starknet/storage/starknet_storage.py                #L92
+- DONE
+
+3.4 add a link to the Besu repo when you mention it
+- All repository has linked on the title of the section but we can add a link to the repo in the text when we mention it
+- DONE
+
+3.5 capitalize python
+- DONE
+
+3.5 trailing coma
+
+3.5 juno big drawback is not keeping reccord of past states
+-DONE
+
+3.5 pathfinder drawback is huge storage print
+- DONE
+
+3.5 we will ask each project to mention it’s own qualities and drawback themselves otherwise they will put a target on my head
+
+What is missing: the part where you explain how the starknet MPT actually works. We learn more about the eth impl than the starknet impl. Ideally before listing the different implementations.
+- Aurelien Help

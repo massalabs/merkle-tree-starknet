@@ -437,17 +437,29 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="book">
+<body id="_introduction_to_the_different_implementations" class="book toc2 toc-left">
 <div id="header">
 <h1>Merkle trees and their implementations in Starknet</h1>
-<div id="toc" class="toc">
+<div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Merkle trees and their implementations in Starknet</a></span></p><ul class="sectlevel1">
 <li><a href="_general_explanation_of_merkle_trees.html">1. General explanation of Merkle trees</a>
 </li>
 <li><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">2. Merkle trees uses and peculiarities in Starknet</a>
 </li>
-<li><a href="_introduction_to_the_different_implementations.html">3. Introduction to the different implementations</a>
+<li><a href="_introduction_to_the_different_implementations.html"><span class="toc-current">3. Introduction to the different implementations</span></a>
+<ul class="sectlevel2">
+<li><a href="_introduction_to_the_different_implementations.html#_pathfinder_rust">3.1. PathFinder - Rust</a>
+</li>
+<li><a href="_introduction_to_the_different_implementations.html#_nethermindeth_juno_go">3.2. NethermindEth - Juno - Go</a>
+</li>
+<li><a href="_introduction_to_the_different_implementations.html#_starkware_python">3.3. Starkware - Python</a>
+</li>
+<li><a href="_introduction_to_the_different_implementations.html#_bonsai_rust">3.4. Bonsai - Rust</a>
+</li>
+<li><a href="_introduction_to_the_different_implementations.html#_comparaison_qualities_and_drawbacks">3.5. Comparaison (qualities and drawbacks).</a>
+</li>
+</ul>
 </li>
 <li><a href="_testing_implementations.html">4. Testing implementations</a>
 </li>
@@ -457,27 +469,191 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
-<div class="ulist">
-<ul>
-<li>
-<p><a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a></p>
-</li>
-<li>
-<p><a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">Merkle trees uses and peculiarities in Starknet</a></p>
-</li>
-<li>
-<p><a href="_introduction_to_the_different_implementations.html">Introduction to the different implementations</a></p>
-</li>
-<li>
-<p><a href="_testing_implementations.html">Testing implementations</a></p>
-</li>
-<li>
-<p><a href="_annexes.html">Annexes</a></p>
-</li>
-</ul>
+<div class="sect1">
+<h2 id="_introduction_to_the_different_implementations">3. Introduction to the different implementations</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_pathfinder_rust">3.1. <a href="https://github.com/eqlabs/pathfinder/blob/main/crates/merkle-tree/src/tree.rs">PathFinder - Rust</a></h3>
+<div class="paragraph">
+<p>Pathfinder tree is immutable, and any mutations result in a new tree with a new root. This mutated variant can then
+be accessed via the new root, and the old variant via the old root.
+Trees share common nodes to be efficient. These nodes perform reference counting and
+will get deleted once all references are gone. State can therefore be tracked over time
+by mutating the current state, and storing the new root. Old states can be dropped by
+deleting old roots which are no longer required.</p>
+</div>
+<div class="sect3">
+<h4 id="_tree_definition">3.1.1. Tree definition</h4>
+<div class="paragraph">
+<p>It is important to understand that since all keys are <a href="https://github.com/eqlabs/pathfinder/blob/ca33e54079bdce288806daa5f8de58d7863a2c4a/crates/crypto/src/algebra/field/felt.rs#L14">Felt</a>, this means
+all paths to a key are equally long - 251 bits.
+Starknet defines three node types for a tree.<br>
+* <code>Leaf nodes</code> which represent an actual value stored.<br>
+* <code>Edge nodes</code> which connect two nodes, and <em>must be</em> a maximal subtree (i.e. be as
+long as possible). This latter condition is important as it strictly defines a tree (i.e. all
+trees with the same leaves must have the same nodes). The path of an edge node can therefore
+be many bits long.<br>
+* <code>Binary nodes</code> is a branch node with two children, left and right. This represents
+only a single bit on the path to a leaf.</p>
+</div>
+<div class="paragraph">
+<p>A tree storing a single key-value would consist of two nodes. The root node would be an edge node
+with a path equal to the key. This edge node is connected to a leaf node storing the value.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_implementation_details">3.1.2. Implementation details</h4>
+<div class="paragraph">
+<p>Pathfinder has defined an additional node type, an <code>Unresolved node</code>. This is used to
+represent a node who&#8217;s hash is known, but has not yet been retrieved from storage (and we therefore
+have no further details about it).
+This implementation is a mix of nodes from persistent storage and any mutations are kept in-memory. It is
+done this way to allow many mutations to a tree before committing only the final result to storage. This
+may be confusing since we just said trees are immutable&#8201;&#8211;&#8201;but since we are only changing the in-memory
+tree, the immutable tree still exists in storage. One can therefore think of the in-memory tree as containing the state changes between tree <code>N</code> and <code>N + 1</code>.</p>
+</div>
+<div class="paragraph">
+<p>The in-memory tree is built using a graph of <code>Rc&lt;RefCell&lt;Node&gt;&gt;</code> which is a bit painful.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Pathfinder is the first Starknet full node implementation.</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_nethermindeth_juno_go">3.2. <a href="https://github.com/NethermindEth/juno/tree/main/core/trie">NethermindEth - Juno - Go</a></h3>
+<div class="paragraph">
+<p>Juno is a dense Merkle Patricia Trie (i.e., all internal nodes have two children).
+This implementation allows for a "flat" storage by keying nodes on their path rather than their hash, resulting in O(1) accesses and O(log n) insertions.<br>
+The state trie <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/">Specification</a> describes a sparse Merkle Trie.
+Note that this dense implementation results in an equivalent commitment.</p>
+</div>
+<div class="paragraph">
+<p>Dense graph is a graph in which the number of edges is close to the maximal number of edges. Sparse graph is a graph in which the number of edges is close to the minimal number of edges. Sparse graph can be a <a href="https://mathworld.wolfram.com/DisconnectedGraph.html">disconnected graph</a>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="mermaid-diagram_corrected_manually.png" alt="mermaid diagram corrected manually">
+</div>
+</div>
+<div class="paragraph">
+<p>Dense Graph If all vertices or nodes in a graph is densely connected (i.e. a node that connects with all neighbour nodes with all possible edges). Here possibly, total number of edges &gt; total number of nodes.</p>
+</div>
+<div class="paragraph">
+<p>Sparse Graph Its an vice versa of dense graph, Here we can observe that a node or vertices is not fully connected to its neighbouring nodes (i.e. it has unconnected/remaining edges). Here possibly, total number of edges &#8656; total number of nodes.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_starkware_python">3.3. <a href="https://github.com/starkware-libs/cairo-lang/blob/caba294d82eeeccc3d86a158adb8ba209bf2d8fc/src/starkware/starkware_utils/commitment_tree/patricia_tree/patricia_tree.py#L26">Starkware - Python</a></h3>
+<div class="paragraph">
+<p>This PMT is immutable Patricia-Merkle tree backed by an immutable fact storage. Any modification applied to the PMT implies the creation of a new one representing the fact of the root of the new tree.</p>
+</div>
+<div class="paragraph">
+<p>For efficiency, the update function does not compute and store the new facts while traversing the tree. Instead, it first traverses the tree to fetch the needed facts for the update. It then
+computes the new facts. Once all facts are computed, it finally stores them.</p>
+</div>
+<div class="paragraph">
+<p>Used in production by the Starknet mainnet and testnets.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bonsai_rust">3.4. <a href="https://github.com/keep-starknet-strange/bonsai-trie/blob/oss/src/trie/merkle_tree.rs">Bonsai - Rust</a></h3>
+<div class="paragraph">
+<p><a href="https://github.com/hyperledger/besu">Besu</a> bonsai storage is an advanced storage management system developed by HyperLedger for their Etherum client.<br>
+Originally, it was using a forest of PMT to store the world state. This had some drawbacks in terms of storage and acces to data.
+reorganizations (reorgs) as it only maintains a single state. Bonsai addresses this limitation by introducing “trielogs” (<a href="https://hackmd.io/@kt2am/BktBblIL3" class="bare">https://hackmd.io/@kt2am/BktBblIL3</a>)</p>
+</div>
+<div class="paragraph">
+<p><a href="https://besu.hyperledger.org/public-networks/concepts/data-storage-formats">Quick comparision between forest of tries and bonsai tries</a></p>
+</div>
+<div class="paragraph">
+<p>The state commitment scheme uses a binary Merkle-Patricia trie with the <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#merkle_patricia_trie">Pedersen hash function</a></p>
+</div>
+<div class="paragraph">
+<p><a href="https://github.com/keep-starknet-strange/bonsai-trie/blob/5e98fe9091233b0ab0eddf3681a29f0da2b4da40/src/trie/merkle_tree.rs#L68">This is used to update, mutate and access global Starknet state as well as individual contract states</a></p>
+</div>
+<div class="paragraph">
+<p>Bonsai offers a compact data representation through its trie structure, reducing storage space requirements by storing nodes based on location rather than hash, thus optimizing read performance.<br>
+Direct data access using item keys simplifies read operations and enhances performance compared to hash-based methods. Automatic pruning of orphaned nodes and old branches ensures a clean and efficient data structure. Bonsai enables scalability and improved performance, catering to applications requiring fast and efficient data access.<br>
+Managing historical data becomes simpler with Bonsai, as only relevant data is retained, facilitating efficient data management.</p>
+</div>
+<div class="paragraph">
+<p>In summary, Bonsai Trie offers space savings, improved read efficiency, automatic data management, enhanced performance, and simplicity in historical data management, making it a compelling choice for various applications, particularly within the Starknet ecosystem.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_comparaison_qualities_and_drawbacks">3.5. Comparaison (qualities and drawbacks).</h3>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph text-center">
+<p>WIP (should be update with starknet team comments)</p>
+</div>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Implementation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Language</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Qualities</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Drawbacks</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pathfinder</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">- High performance,<br>
+- Scalability,<br>
+- Cairo specification adherence</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">- Low portability, Huge storage print</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Juno</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Golang</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">- Operational efficiency,<br>
+- User-friendliness,<br>
+- Ease of deployment,<br>
+- Ethereum compatibility,<br>
+- Use less storage than Pathfinder,<br>
+- JSON-RPC Api</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">- Not keeping reccord of past states,<br>
+- Can only answer calls about the chain head state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Starkware - Patricia tree</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Python</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">- Doesn&#8217;t have get_proof (not standard API)/ verify_proof method,<br>
+- Low portability,<br>
+- High dependency with Cairo</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bonsai</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">- Can revert to specific commit,<br>
+- Optimized for holding Starknet Felt items,<br>
+- Madara-compatible root hash,<br>
+- A Flat DB allowing direct access to items without requiring trie traversal,<br>
+- Trie Logs,<br>
+- Thread-safe transactional states</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">- Read data history becomes more resource-intensive than Forest,<br>
+- Does not support managing reorganizations,</p></td>
+</tr>
+</tbody>
+</table>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
 </div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="_general_explanation_of_merkle_trees.html">General explanation of Merkle trees</a> →</p>
+<p>← Previous: <a href="_merkle_trees_uses_and_peculiarities_in_starknet.html">Merkle trees uses and peculiarities in Starknet</a> | ↑ Up: <a href="index.html">Merkle trees and their implementations in Starknet</a> | Next: <a href="_testing_implementations.html">Testing implementations</a> →</p>
 </div>
 </div>
 <div id="footer">

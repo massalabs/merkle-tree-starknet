@@ -1,0 +1,21 @@
+[package]
+name = "runner"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bonsai-trie = { git = "https://github.com/keep-starknet-strange/bonsai-trie" }
+rust_ffi = { path = "../rust_ffi" }
+starknet-types-core = "0.0.7"
+
+anyhow = "1.0.79"
+
+mp-felt = { git = "https://github.com/keep-starknet-strange/madara.git", rev = "f30acea8af7e28e956e771928130e12bfc084832", package = "mp-felt", features = [
+    "parity-scale-codec",
+    "serde",
+] }
+bitvec = "1.0.1"
+serde_json = "1.0.113"
+serde = "1.0.196"

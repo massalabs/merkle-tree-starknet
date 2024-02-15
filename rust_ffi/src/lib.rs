@@ -81,7 +81,7 @@ pub extern "C" fn load_scenario(s: *const c_char) -> CommandList {
     let c_str = unsafe { CStr::from_ptr(s) };
     let file_path = c_str.to_string_lossy().into_owned();
     let cmd_list = read_yaml_file(&file_path).unwrap();
-    dbg!(&cmd_list);
+    // dbg!(&cmd_list);
     cmd_list
 }
 

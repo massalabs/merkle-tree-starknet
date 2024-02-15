@@ -372,17 +372,34 @@ graph
 ....
 
 
-== Merkle trees uses and peculiarities in Starknet.
+== Merkle trees uses and peculiarities in Starknet
 
-In Starknet, Merkle trees serve as the backbone for organizing and securing the state of smart contracts and transactions. By utilizing custom Binary Merkle-Patricia Trees, Starknet optimizes state storage and retrieval, enabling efficient execution of Ethereum-compatible smart contracts.
+In Starknet, Merkle trees serve as the backbone for organizing and securing the state of smart contracts and transactions.
+By utilizing custom Binary Merkle-Patricia Trees of height 251, Starknet optimizes state storage and retrieval, enabling efficient execution. +
 From an external perspective the tree is similar to a key-value store, where both key
-and value are [Felts](Felt).
+and value are https://github.com/eqlabs/pathfinder/blob/ca33e54079bdce288806daa5f8de58d7863a2c4a/crates/crypto/src/algebra/field/felt.rs#L14[Felt].
 
-Felt refer to the basic data units stored within the Starknet state. These items can encompass various types of data, including integers, strings, booleans, and more complex structures like arrays and maps. The use of Felt items ensures uniformity and efficiency in data handling across smart contracts and transactions. Felt items are optimized for storage and retrieval within Starknet's Merkle trees, enabling efficient execution of Ethereum-compatible smart contracts while maintaining data integrity and security.
+* https://github.com/eqlabs/pathfinder/blob/ca33e54079bdce288806daa5f8de58d7863a2c4a/crates/crypto/src/algebra/field/felt.rs#L14[Felt] : a field element is a number 0..p-1 with p=2^{251}+17*2^{192}+1, and it forms the basic building block of most Starknet interactions.
 
 Refer to <<Evolution of a binary PMT upon data insertion>> for more details.
 
-=== https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#state_commitment[State commitment]:
+=== About Nodes +
+Each node in the trie is represented by a triplet (length, path, value), where:
+
+
+* `path`: is the path from the current node to its unique non-empty subtrie.
+* `len`: the length of the path, measured in nodes.
+* `value`: is the value of the node, which can be either data, or the hash of two non-empty child nodes..
+
+An empty node is one whose triplet values are (0,0,0)
+. Leaf nodes and internal nodes can be empty. A subtrie rooted at a node (𝑙𝑒𝑛𝑔𝑡ℎ,𝑝𝑎𝑡ℎ,𝑣𝑎𝑙𝑢𝑒)
+ has a single non-empty subtrie, rooted at the node obtained by following the path specified by 𝑝𝑎𝑡ℎ
+.
+
+
+
+
+=== https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#state_commitment[State commitment]
 
   The state commitment is a digest that represents the state. In Starknet, the state commitment combines the roots of two binary Merkle-Patricia tries of height 251 in the following manner:
 
@@ -402,11 +419,36 @@ Where:
 
 * `contract_trie_root` is the root of the https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#contracts_trie[contract trie], a Merkle-Patricia trie whose leaves are the contracts' states.
 
-* `class_trie_root` is the root of the https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#classes_trie[class trie], a Merkle-Patricia trie whose leaves are the compiled class hashes.
+* `class_trie_root` is the root of the https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#classes_trie[class trie], a Merkle-Patricia trie whose leaves are the https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/class-hash/[compiled class hashes].
 
 
+=== https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#contracts_trie[The contract trie]
+As with Ethereum, this trie is a two-level structure, whose leaves correspond to distinct contracts. The address of each contract determines the path from the trie’s root to its corresponding leaf, whose content encodes the contract’s state.
+
+The information stored in the leaf is as follows:
+[source]
+----
+hPed(
+    class_hash,
+    storage_root,
+    nonce,
+    0
+)
+----
+Where:
+
+* `hPed` is the https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/hash-functions/#pedersen_hash[Pedersen] hash function.
+
+* `class_hash` is the hash of the https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/class-hash/[contract’s definition].
+
+* `storage_root` is the root of another Merkle-Patricia trie of height 251 that is constructed from the contract’s storage.
+
+* `nonce` is the current nonce of the contract.
 
 == Introduction to the different implementations
+
+
+
 
 === https://github.com/eqlabs/pathfinder/blob/main/crates/merkle-tree/src/tree.rs[PathFinder - Rust]
 
@@ -418,21 +460,23 @@ by mutating the current state, and storing the new root. Old states can be dropp
 deleting old roots which are no longer required.
 
 ==== Tree definition
-It is important to understand that since all keys are [Felts](Felt), this means
+
+It is important to understand that since all keys are https://github.com/eqlabs/pathfinder/blob/ca33e54079bdce288806daa5f8de58d7863a2c4a/crates/crypto/src/algebra/field/felt.rs#L14[Felt], this means
 all paths to a key are equally long - 251 bits.
-Starknet defines three node types for a tree.
-`Leaf nodes` which represent an actual value stored.
-`Edge nodes` which connect two nodes, and __must be__ a maximal subtree (i.e. be as
+Starknet defines three node types for a tree. +
+* `Leaf nodes` which represent an actual value stored. +
+* `Edge nodes` which connect two nodes, and __must be__ a maximal subtree (i.e. be as
 long as possible). This latter condition is important as it strictly defines a tree (i.e. all
 trees with the same leaves must have the same nodes). The path of an edge node can therefore
-be many bits long.
-`Binary nodes` is a branch node with two children, left and right. This represents
+be many bits long. +
+* `Binary nodes` is a branch node with two children, left and right. This represents
 only a single bit on the path to a leaf.
+
 A tree storing a single key-value would consist of two nodes. The root node would be an edge node
 with a path equal to the key. This edge node is connected to a leaf node storing the value.
 
 ==== Implementation details
-Starknet have defined an additional node type, an `Unresolved node`. This is used to
+Pathfinder has defined an additional node type, an `Unresolved node`. This is used to
 represent a node who's hash is known, but has not yet been retrieved from storage (and we therefore
 have no further details about it).
 This implementation is a mix of nodes from persistent storage and any mutations are kept in-memory. It is
@@ -446,21 +490,58 @@ The in-memory tree is built using a graph of `Rc<RefCell<Node>>` which is a bit 
 
 === https://github.com/NethermindEth/juno/tree/main/core/trie[NethermindEth - Juno - Go]
 
-Trie is a dense Merkle Patricia Trie (i.e., all internal nodes have two children).
-This implementation allows for a "flat" storage by keying nodes on their path rather than their hash, resulting in O(1) accesses and O(log n) insertions.
-The state trie [specification] describes a sparse Merkle Trie.
+Juno is a dense Merkle Patricia Trie (i.e., all internal nodes have two children).
+This implementation allows for a "flat" storage by keying nodes on their path rather than their hash, resulting in O(1) accesses and O(log n) insertions. +
+The state trie https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/[Specification] describes a sparse Merkle Trie.
 Note that this dense implementation results in an equivalent commitment.
 
-Terminology:
+Dense graph is a graph in which the number of edges is close to the maximal number of edges. Sparse graph is a graph in which the number of edges is close to the minimal number of edges. Sparse graph can be a https://mathworld.wolfram.com/DisconnectedGraph.html[disconnected graph].
 
-* `path`: represents the path as defined in the specification. Together with len,
-    represents a relative path from the current node to the node's nearest non-empty child.
-* `len`: represents the len as defined in the specification. The number of bits to take
-    from the fixed-length path to reach the nearest non-empty child.
-* `key`: represents the storage key for trie [Node]s. It is the full path to the node from the
-    root.
+// DO NOT REMOVE THE COMMENT BELOW
 
-https://docs.starknet.io/documentation/develop/State/starknet-state[Specification]
+// mermaid code for the image below
+// currently mermaid has some bug and the graph is horrible when links
+// A --- D
+// A --- C
+// B --- C
+// B --- D
+// so the graph has been rendered as a png and fixed manually
+
+// [mermaid, svg]
+// ....
+// graph LR
+// subgraph Sparse
+//     direction LR
+//     As((A)) --- Bs((B))
+//     As --- Ds((D))
+//     Bs --- Cs((C))
+//     Ds --- Es((E))
+// end
+
+// subgraph Dense
+//     direction LR
+//     A --- B
+//     D --- C
+//     B --- E
+//     C --- E
+
+
+//     A((A))
+//     B((B))
+//     D((D))
+//     E((E))
+//     C((C))
+// end
+
+// Sparse ~~~ Dense
+// ....
+
+image::mermaid-diagram_corrected_manually.png[]
+
+Dense Graph If all vertices or nodes in a graph is densely connected (i.e. a node that connects with all neighbour nodes with all possible edges). Here possibly, total number of edges > total number of nodes.
+
+Sparse Graph Its an vice versa of dense graph, Here we can observe that a node or vertices is not fully connected to its neighbouring nodes (i.e. it has unconnected/remaining edges). Here possibly, total number of edges <= total number of nodes.
+
 
 
 === https://github.com/starkware-libs/cairo-lang/blob/caba294d82eeeccc3d86a158adb8ba209bf2d8fc/src/starkware/starkware_utils/commitment_tree/patricia_tree/patricia_tree.py#L26[Starkware - Python]
@@ -468,17 +549,15 @@ https://docs.starknet.io/documentation/develop/State/starknet-state[Specificatio
 
 This PMT is immutable Patricia-Merkle tree backed by an immutable fact storage. Any modification applied to the PMT implies the creation of a new one representing the fact of the root of the new tree.
 
-For efficiency, the update function does not compute and store the new facts while traversing the
-\
-tree. Instead, it first traverses the tree to fetch the needed facts for the update. It then
+For efficiency, the update function does not compute and store the new facts while traversing the tree. Instead, it first traverses the tree to fetch the needed facts for the update. It then
 computes the new facts. Once all facts are computed, it finally stores them.
 
-Used by ContractState and the Starknet OS run in the GpsAmbassador
+Used in production by the Starknet mainnet and testnets.
 
 
 === https://github.com/keep-starknet-strange/bonsai-trie/blob/oss/src/trie/merkle_tree.rs[Bonsai - Rust]
-Besu bonsai storage is an advanced storage management system developed by HyperLedger for their Etherum client, Besu.
-Besu is an open-source Ethereum client. Originally, it was using a forest of PMT to store the world state. This had some drawbacks in terms of storage and acces to data.
+https://github.com/hyperledger/besu[Besu] bonsai storage is an advanced storage management system developed by HyperLedger for their Etherum client. +
+Originally, it was using a forest of PMT to store the world state. This had some drawbacks in terms of storage and acces to data.
 // Besu introduced several enhancements with bonsai. Unlike forest of tries that store nodes of the world state by hash, Bonsai stores them by location in the trie. This approach enables natural pruning by replacing old nodes at the same position in the trie with the new ones. Unlike hash-based storage, which only adds new nodes to the database and keeps growing, Bonsai’s technique ensures that there is only one version of the state at any given time. Consequently, it does not support managi\
 reorganizations (reorgs) as it only maintains a single state. Bonsai addresses this limitation by introducing “trielogs” (https://hackmd.io/@kt2am/BktBblIL3)
 
@@ -492,22 +571,30 @@ Bonsai offers a compact data representation through its trie structure, reducing
 Direct data access using item keys simplifies read operations and enhances performance compared to hash-based methods. Automatic pruning of orphaned nodes and old branches ensures a clean and efficient data structure. Bonsai enables scalability and improved performance, catering to applications requiring fast and efficient data access. +
 Managing historical data becomes simpler with Bonsai, as only relevant data is retained, facilitating efficient data management.
 
-In summary, Bonsai Trie offers space savings, improved read efficiency, automatic data management, enhanced performance, and simplicity in historical data management, making it a compelling choice for various applications, particularly within the Starknet and Ethereum-compatible smart contracts ecosystem.
+In summary, Bonsai Trie offers space savings, improved read efficiency, automatic data management, enhanced performance, and simplicity in historical data management, making it a compelling choice for various applications, particularly within the Starknet ecosystem.
 
 === Comparaison (qualities and drawbacks).
+
+====
+[.text-center]
+WIP (should be update with starknet team comments)
+====
+
 |==========================
 
 | Implementation            | Language | Qualities | Drawbacks
 
 | Pathfinder                | Rust     | - High performance, +
 - Scalability, +
-- Cairo specification adherence | - Low portability,
+- Cairo specification adherence | - Low portability, Huge storage print
 | Juno                      | Golang   | - Operational efficiency, +
 - User-friendliness, +
 - Ease of deployment, +
 - Ethereum compatibility, +
-- JSON-RPC Api |
-| Starkware - Patricia tree | python   | | - Doesn't have get_proof (not standard API)/ verify_proof method, +
+- Use less storage than Pathfinder, +
+- JSON-RPC Api | - Not keeping reccord of past states, +
+- Can only answer calls about the chain head state
+| Starkware - Patricia tree | Python   | | - Doesn't have get_proof (not standard API)/ verify_proof method, +
 - Low portability, +
 - High dependency with Cairo
 | Bonsai                    | Rust     | - Can revert to specific commit, +
@@ -523,7 +610,7 @@ In summary, Bonsai Trie offers space savings, improved read efficiency, automati
 
 <<<
 
-== Testing bonsai trie implementations
+== Testing implementations
 include::test_framework.adoc[leveloffset=+1]
 
 == Annexes
@@ -559,16 +646,3 @@ Bonsai Tries is a data storage layout policy designed to reduce storage requirem
 
 Bonsai stores leaf values in a trie log, separate from the branches of the trie. Bonsai stores nodes by the location of the node instead of the hash of the node. Bonsai can access the leaf from the underlying storage directly using the account key. This greatly reduces the disk space needed for storage and allows for less resource-demanding and faster read performance. Bonsai inherently prunes orphaned nodes and old branches.
 
-[NOTE]
-====
-To render this document as pdf and html and see the mermaid diagrams and have syntax highlighting, you need to:
-
-. install diagram extension to asciidoctor `gem install asciidoctor-diagram`
-. install mermaid command line `npm install -g @mermaid-js/mermaid-cli`
-. install a syntax highlighter for asciidoctor-pdf `gem install rouge`
-. gem install asciidoctor-multipage
-. render the documentm:
-----
-include::render_doc.sh[]
-----
-====

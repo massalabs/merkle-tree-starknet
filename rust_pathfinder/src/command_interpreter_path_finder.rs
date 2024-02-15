@@ -5,13 +5,12 @@ use bitvec::vec::BitVec;
 use rust_ffi::{Command, CommandId};
 // use starknet_types_core::{felt::Felt};
 
-
 use anyhow::Context;
 use pathfinder_common::hash::PedersenHash;
 use pathfinder_crypto::Felt;
 use pathfinder_merkle_tree::storage::Storage;
 use pathfinder_merkle_tree::tree::MerkleTree;
-use pathfinder_storage::{StoredNode, Node};
+use pathfinder_storage::{Node, StoredNode};
 
 use super::*;
 
@@ -39,49 +38,76 @@ impl Storage for TestStorage {
     }
 }
 
+fn extend_key_251(key: BitVec<u8, Msb0>) -> BitVec<u8, Msb0> {
+    //
+    // let key: BitVec<u8, Msb0> = BitVec::from_vec(val.to_be_bytes().to_vec());
+
+    let mut key251: BitVec<u8, Msb0> = bitvec![u8, Msb0; 0; 251];
+    key251.truncate(key251.len() - key.len());
+
+    key251.extend(key.iter());
+    // println!("{:?}", &key251);
+    key251
+}
+
 pub fn run_command<'a>(
     command: &Command,
     tree: &mut TestTree,
     storage: &mut TestStorage,
 ) {
-
     let _r = match command.id {
         CommandId::Insert => {
             let key = command.key();
             let value = command.value();
+
             println!("insert {:?} {}", &key, value);
             let key_bitvec = BitVec::from_vec(key);
+            let key_bitvec = extend_key_251(key_bitvec);
             let felt = Felt::from_hex_str(&value).unwrap();
-
             tree.set(storage, key_bitvec, felt).unwrap();
-
             let _update = tree.to_owned().commit(storage).unwrap();
         }
         CommandId::Remove => {
             let key = command.key();
             let key_bitvec = BitVec::from_vec(key);
-            println!("remove {:?}", key_bitvec);
+            let key_bitvec = extend_key_251(key_bitvec);
             tree.set(storage, key_bitvec, Felt::ZERO).unwrap();
             let _update = tree.to_owned().commit(storage).unwrap();
         }
 
         CommandId::CheckRootHash => {
             let update = tree.to_owned().commit(storage).unwrap();
-            println!("CheckRootHash = {:?}", update.root);
-            assert_eq!(update.root, Felt::from_hex_str(&command.value()).unwrap());
+            let mut buf = [0; 128];
+            println!("CheckRootHash = {:?}", update.root.as_hex_str(&mut buf));
+            assert_eq!(
+                update.root,
+                Felt::from_hex_str(&command.value()).unwrap()
+            );
         }
 
         CommandId::Get => {
             let key = command.key();
             let value = command.value();
-            let result = tree.to_owned().get(storage, BitVec::from_vec(key));
-            assert_eq!(Felt::from_hex_str(&value).unwrap(),result.unwrap().unwrap());
+
+            println!("get {:?} {}", key, value);
+            let key_bitvec = BitVec::from_vec(key);
+            let key_bitvec = extend_key_251(key_bitvec);
+
+            let result = tree.to_owned().get(storage, key_bitvec);
+            assert_eq!(
+                Felt::from_hex_str(&value).unwrap(),
+                result.unwrap().unwrap()
+            );
         }
+
         CommandId::Contains => {
             let key = command.key();
             let value = command.value();
 
-            let result = tree.to_owned().get(storage, BitVec::from_vec(key));
+            let key_bitvec = BitVec::from_vec(key);
+            let key_bitvec = extend_key_251(key_bitvec);
+
+            let result = tree.to_owned().get(storage, key_bitvec);
 
             let exist = match result.unwrap() {
                 Some(_) => true,
@@ -135,9 +161,9 @@ pub fn commit_and_persist(
             Node::Edge { child, path } => {
                 let child = match child {
                     Child::Id(idx) => idx,
-                    Child::Hash(hash) => *indices
-                        .get(&hash)
-                        .expect("Child should have an index"),
+                    Child::Hash(hash) => {
+                        *indices.get(&hash).expect("Child should have an index")
+                    }
                 };
 
                 StoredNode::Edge { child, path }
@@ -173,6 +199,7 @@ impl CommandTrait for Command {
             .unwrap()
             .to_string(),
             CommandId::CheckRootHash => self.get_arg1(),
+
             _ => unimplemented!("Command has no value"),
         }
     }
