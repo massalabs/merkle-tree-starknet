@@ -1,0 +1,22 @@
+// because zon file is really just a zig struct
+// comments are really done in the same way using 2 forward slashes
+.{
+    // the name of your project
+    .name = "zig_common",
+    // the version of your project
+    .version = "0.0.1",
+
+    // the actual packages you need as dependencies of your project
+    .dependencies = .{
+        // the name of the package
+        .clap = .{
+            // the url to the release of the module
+            .url = "https://github.com/Hejsil/zig-clap/archive/0f2db7700b05356ebb1ccddbbf1797048925f072.tar.gz",
+            // the hash of the module, this is not the checksum of the tarball
+            .hash = "12203896de6eedec14712f4f1eaac8b646939cfed213c56accf231a0abb05f9dbb77",
+        },
+    },
+    .paths = .{
+        "",
+    },
+}

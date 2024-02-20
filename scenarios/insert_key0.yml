@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./schema.json
+
+# try to insert a value with key 0
+# it seems to work on some implementations but not on others
+
+- insert:
+    key: [0]
+    value: "0x1"

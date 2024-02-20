@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=./schema.json
+
+# inspired from https://discord.com/channels/761151090673844244/1196829253241667584/1214163628660498452
+
+#bonsai_db.insert(key00, value00);
+- insert:
+    key: [0]
+    value: "0x0"
+
+# bonsai_db.insert(key01, value01);
+- insert:
+    key: [1]
+    value: "0x1"
+
+# bonsai_db.insert(key02, value02);
+- insert:
+    key: [2]
+    value: "0x2"
+
+# let id = id_builder.new();
+# bonsai_db.commit(id);
+# let root_hash1 = bonsai_db.root_hash();
+- check_root_hash:
+    expected_value: "0x43d6ab0ddd7192b47e170b220c7aa56a5b36699aabd01ac087ef824ce3d894"
+
+# bonsai_db.insert(key10, value10);
+- insert:
+    key: [10]
+    value: "0xa"
+
+# bonsai_db.insert(key11, value11);
+- insert:
+    key: [11]
+    value: "0xb"
+
+# bonsai_db.insert(key12, value12);
+- insert:
+    key: [12]
+    value: "0xc"
+
+# let id = id_builder.new();
+# bonsai_db.commit(id);
+# let root_hash1 = bonsai_db.root_hash();
+- check_root_hash:
+    expected_value: "0xc09e1751d86eecd3cb228260e2b689d999e712720cd5ea1ca4164794e328b6"

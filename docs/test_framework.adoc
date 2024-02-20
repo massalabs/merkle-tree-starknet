@@ -150,3 +150,48 @@ include::../scenario/3.yml[]
 
 ## Write your runner
 ## Implement the interface / trait that glued your implementation with the test framework
+
+## Resources
+
+### Test grammar
+
+[source]
+----
+<yaml_file> ::= <directive>? <action>*
+
+<directive> ::= "# yaml-language-server: $schema=./schema.json"
+
+<action> ::= "- insert:" <insert_action>
+           | "- check_root_hash:" <check_root_hash_action>
+           | "- get:" <get_action>
+           | "- contains:" <contains_action>
+           | "- remove:" <remove_action>
+
+<insert_action> ::= "key:" <key_array> "\n" "value:" <string_value>
+
+<check_root_hash_action> ::= "expected_value:" <string_value>
+
+<get_action> ::= "key:" <key_array> "\n" "expected_value:" <string_value>
+
+<contains_action> ::= "key:" <key_array> "\n" "expected_value:" <boolean>
+
+<remove_action> ::= "key:" <key_array>
+
+<key_array> ::= "[" <integer> ("," <integer>)* "]"
+
+<string_value> ::= <hexadecimal_value> | <decimal_value>
+
+<hexadecimal_value> ::= "0x" <hex_digits>
+
+<decimal_value> ::= <digit>+
+
+<boolean> ::= "true" | "false"
+
+<integer> ::= <digit>+
+
+<hex_digits> ::= <hex_digit>+
+
+<digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+<hex_digit> ::= <digit> | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F"
+----

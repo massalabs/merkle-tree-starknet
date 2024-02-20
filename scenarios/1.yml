@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./schema.json
+
+- insert:
+    key: [1]
+    value: "0x1"
+
+- check_root_hash:
+    expected_value: "0x2ebbd6878f81e49560ae863bd4ef327a417037bf57b63a016130ad0a94c8fa7"
+
+- get:
+    key: [1]
+    expected_value: "0x1"
+
+- contains:
+    key: [1]
+    expected_value: true
+
+- insert:
+    key: [2]
+    value: "0x1"
+
+- check_root_hash:
+    expected_value: "0x2e7fce0ca3e8cb3b7bf04cbf9d1a187f6103bf53851dc5f59d5aabe8a3207f5"
+
+- contains:
+    key: [1]
+    expected_value: true

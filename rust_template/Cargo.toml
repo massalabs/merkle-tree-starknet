@@ -1,0 +1,17 @@
+[package]
+name = "runner"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.14"
+env_logger = "0.11.2"
+anyhow = "1.0.79"
+bitvec = "1.0.1"
+serde_json = "1.0.113"
+serde = "1.0.196"
+
+rust_ffi = { path = "../rust_ffi" }
+rust_common = { version = "0.1.0", path = "../rust_common" }

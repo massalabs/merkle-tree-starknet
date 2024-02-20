@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./schema.json
+
+- insert:
+    key: [1, 1, 1]
+    value: "0x66342762FDD54D033c195fec3ce2568b62052e"
+
+- check_root_hash:
+    expected_value: "0x4dff6cff9ce781e7700c6f43fd1e944736a9144ca946a280afe5fafea4e45af"
+
+- insert:
+    key: [1, 1, 2]
+    value: "0x66342762FDD54D033c195fec3ce2568b62052e"
+
+- check_root_hash:
+    expected_value: "0x21c57215657fa4a475a54f99ad8571836dec23cd724ca25650dfdc7b55498fe"
+
+- insert:
+    key: [1, 1, 3]
+    value: "0x66342762FDD54D033c195fec3ce2568b62052e"
+
+- get:
+    key: [1, 1, 1]
+    expected_value: "0x66342762FDD54D033c195fec3ce2568b62052e"
+
+- check_root_hash:
+    expected_value: "0x67fa4710f37a846c966d087db635a6be4d22451e1ba774f3f6f52829228ef94"

@@ -1,0 +1,208 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - 'release-*'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: full
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        platform: [x86_64, arm64]
+        include:
+          - os: ubuntu-latest
+            platform: x86_64
+            target: x86_64-unknown-linux-gnu
+            lib-ext: so
+          - os: ubuntu-latest
+            platform: arm64
+            target: aarch64-unknown-linux-gnu
+            lib-ext: so
+          - os: macOS-latest
+            platform: x86_64
+            target: x86_64-apple-darwin
+            lib-ext: dylib
+          - os: macOS-latest
+            platform: arm64
+            target: aarch64-apple-darwin
+            lib-ext: dylib
+          - os: windows-latest
+            platform: x86_64
+            target: x86_64-pc-windows-gnu
+            lib-ext: dll
+        exclude:
+          - os: windows-latest
+            platform: arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - uses: ilammy/setup-nasm@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - uses: Swatinem/rust-cache@v2
+
+      # Build rust_ffi
+      - name: build rust_ffi !arm64
+        uses: actions-rs/toolchain@v1
+        if: matrix.platform != 'arm64'
+        with:
+          toolchain: stable
+      - run: |
+          cd rust_ffi
+          cargo xtask
+
+
+      - name: build rust_ffi arm64
+        uses: actions-rs/toolchain@v1
+        if: matrix.platform == 'arm64'
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - run: |
+          cd rust_ffi
+          cargo xtask
+
+      # Build rust_common
+      - name: build rust_common !arm64
+        uses: actions-rs/cargo@v1
+        if: matrix.platform != 'arm64'
+        with:
+          command: build
+          args: --manifest-path rust_common/Cargo.toml
+
+      - name: build rust_common arm64
+        uses: actions-rs/cargo@v1
+        if: matrix.platform == 'arm64'
+        with:
+          use-cross: true
+          command: build
+          args: --target ${{ matrix.target }} --manifest-path rust_common/Cargo.toml
+
+      # - name: list
+      #   shell: bash
+      #   run: |
+      #     ls -l rust_ffi/target/debug
+
+      # Build c_common
+      - name: build c_common !arm64
+        if: matrix.platform != 'arm64' && matrix.os != 'windows-latest'
+        run: |
+          cd c_common
+          make all
+          cd ..
+
+      - name: build c_common arm64
+        if: matrix.platform == 'arm64'
+        run: |
+          cd c_common
+          make all
+          cd ..
+
+      - name: list
+        shell: bash
+        run: |
+          find . -type f -name *.so
+          find . -type f -name *.dll
+          find . -type f -name *.dylib
+          find . -type f -name *.exe
+
+      # Rust must be distributed as sources as ABI is not stabilized
+      - name: Package Rust
+        shell: bash
+        run: |
+          lang=rust
+          mkdir ${lang}_pkg
+          cp -vr ${lang}_common ${lang}_pkg/${lang}_common
+          cp -vr rust_ffi ${lang}_pkg/rust_ffi
+
+          for dir in rust_ffi rust_common
+          do
+            cd rust_pkg/$dir
+            cargo clean
+            cd ../..
+          done
+          cp -vr ${lang}_template ${lang}_pkg/
+
+          cp -vr scripts ${lang}_pkg/
+          cp -vr scenarios ${lang}_pkg/
+
+          tar czvf rust_${{ github.ref_name }}_${{ matrix.target}}.tar.gz rust_pkg
+
+      # C is distributed as binaries
+      - name: Package C
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          lang=c
+          mkdir -p ${lang}_pkg/rust_ffi
+          cp -v rust_ffi/librust_ffi.${{ matrix.lib-ext}} ${lang}_pkg/rust_ffi/librust_ffi.${{ matrix.lib-ext}}
+          cp -v rust_ffi/bindings.h ${lang}_pkg/rust_ffi/bindings.h
+
+          mkdir -p ${lang}_pkg/${lang}_common/src/include
+          cp -v ${lang}_common/src/include/test_tree.h ${lang}_pkg/${lang}_common/src/include/
+          cp -v ${lang}_common/libtree.${{ matrix.lib-ext}} ${lang}_pkg/${lang}_common/
+          cp -v ${lang}_common/Makefile ${lang}_pkg/${lang}_common/
+          cp -vr ${lang}_template ${lang}_pkg/
+
+          cp -vr scripts ${lang}_pkg/
+          cp -vr scenarios ${lang}_pkg/
+
+          tar czvf ${lang}_${{ github.ref_name }}_${{ matrix.target}}.tar.gz ${lang}_pkg
+
+      - name: Package
+        shell: bash
+        run: |
+          function package {
+            lang=$1
+
+            if [[ "${{ matrix.os }}" == "windows-latest" ]]
+            then
+              librust_ffi="rust_ffi"
+            else
+              librust_ffi="librust_ffi"
+            fi
+
+            mkdir -p ${lang}_pkg/rust_ffi
+            cp -v rust_ffi/${librust_ffi}.${{ matrix.lib-ext}} ${lang}_pkg/rust_ffi/${librust_ffi}.${{ matrix.lib-ext}}
+            cp -v rust_ffi/bindings.h ${lang}_pkg/rust_ffi/bindings.h
+
+            mkdir -p ${lang}_pkg/${lang}_common
+            cp -vr ${lang}_common ${lang}_pkg/
+            cp -vr ${lang}_template ${lang}_pkg/
+
+            cp -vr scripts ${lang}_pkg/
+            cp -vr scenarios ${lang}_pkg/
+
+            tar czvf ${lang}_${{ github.ref_name }}_${{ matrix.target}}.tar.gz ${lang}_pkg
+          }
+
+          package go
+          package python
+          package ts
+          package zig
+
+          ls -l *.tar.gz
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '*.tar.gz'
