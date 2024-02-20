@@ -1,118 +1,105 @@
-use bonsai_trie::{
-    databases::{create_rocks_db, RocksDB, RocksDBConfig},
-    BonsaiStorage, BonsaiStorageConfig,
+use anyhow::{Context, Result};
+use bitvec::{order::Msb0, prelude::BitSlice};
+use pathfinder_common::hash::PedersenHash;
+use pathfinder_crypto::Felt;
+use pathfinder_merkle_tree::{storage::Storage, tree::MerkleTree};
+use pathfinder_storage::StoredNode;
+use rust_common::{
+    init_runner,
+    tree::{Key, TestTree, Value},
 };
-use command_interpreter_path_finder::{
-    run_pathfinder_test, TestStorage, TestTree,
-};
-use std::{ffi::CString, io::Write};
+use std::collections::HashMap;
 
 extern crate log;
-// use rust_ffi::{get_test_cases};
 
-use bitvec::prelude::*;
-use starknet_types_core::hash::Pedersen;
+type TreeType = MerkleTree<PedersenHash, 251>;
 
-mod command_interpreter_path_finder;
+#[derive(Default, Debug)]
+pub struct TestStorage {
+    nodes: HashMap<u64, (Felt, StoredNode)>,
+    leaves: HashMap<Felt, Felt>,
+}
 
-fn print_root(tree: &TestTree, storage: &TestStorage) {
-    let mut buf = [0; 128];
-    match tree.to_owned().commit(storage) {
-        Ok(update) => {
-            println!("root {}", update.root.as_hex_str(&mut buf));
-        }
-        Err(e) => {
-            println!("Error: {:?}", e);
+impl Storage for TestStorage {
+    fn get(&self, node: u64) -> anyhow::Result<Option<StoredNode>> {
+        Ok(self.nodes.get(&node).map(|x| x.1.clone()))
+    }
+
+    fn hash(&self, node: u64) -> anyhow::Result<Option<Felt>> {
+        Ok(self.nodes.get(&node).map(|x| x.0))
+    }
+
+    fn leaf(&self, path: &BitSlice<u8, Msb0>) -> anyhow::Result<Option<Felt>> {
+        let key = Felt::from_bits(path).context("Mapping path to felt")?;
+
+        Ok(self.leaves.get(&key).cloned())
+    }
+}
+
+pub struct TestEnvironment {
+    pub tree: TreeType,
+    pub storage: TestStorage,
+}
+
+impl TestEnvironment {
+    pub fn new() -> Self {
+        Self {
+            tree: TreeType::empty(),
+            storage: TestStorage::default(),
         }
     }
 }
-/// Create a key of 251 bits from a u64
-fn make_key_251(val: u64) -> BitVec<u8, Msb0> {
-    //
-    let key: BitVec<u8, Msb0> = BitVec::from_vec(val.to_be_bytes().to_vec());
 
-    let mut key251: BitVec<u8, Msb0> = bitvec![u8, Msb0; 0; 251];
-    key251.truncate(key251.len() - key.len());
+impl TestTree for TestEnvironment {
+    fn insert(&mut self, key: &Key, value: &Value) -> Result<()> {
+        self.tree.set(
+            &self.storage,
+            key.to_owned(),
+            Felt::from_be_slice(value)?,
+        )?;
+        self.commit()?;
+        Ok(())
+    }
 
-    key251.extend(key.iter());
-    println!("{:?}", &key251);
-    key251
-}
+    fn remove(&mut self, key: &Key) -> Result<()> {
+        // println!("remove {}", key);
+        self.insert(key, &Felt::ZERO.as_be_bytes().to_vec())?;
+        self.commit()?;
+        Ok(())
+    }
 
-fn path_finder_minimal_test() {
-    let mut tree: pathfinder_merkle_tree::tree::MerkleTree<
-        pathfinder_common::hash::PedersenHash,
-        251,
-    > = TestTree::empty();
-    let storage = TestStorage::default();
+    fn get(&self, key: &Key) -> Result<Value> {
+        // println!("get {}", key);
+        Ok(self
+            .tree
+            .to_owned()
+            .get(&self.storage, key.to_owned())?
+            .map_or(vec![], |x| x.as_be_bytes().to_vec()))
+    }
 
-    let value1 = pathfinder_crypto::Felt::from(1u64);
-    let value2 = pathfinder_crypto::Felt::from(2u64);
+    fn contains(&self, key: &Key) -> Result<bool> {
+        // println!("contains {}", key);
+        self.get(key).map(|x| x.iter().any(|x| x != &0))
+    }
 
-    dbg!(&value1);
-    dbg!(&value2);
+    fn commit(&mut self) -> Result<Option<Vec<u8>>> {
+        Ok(Some(
+            self.tree
+                .to_owned()
+                .commit(&self.storage)?
+                .root
+                .as_be_bytes()
+                .to_vec(),
+        ))
+    }
 
-    let keys: Vec<BitVec<u8, Msb0>> =
-        (0..10).map(|x| make_key_251(x)).collect();
-
-    tree.set(&storage, keys[0].clone(), value1).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[1].clone(), value1).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[2].clone(), value2).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[3].clone(), value1).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[4].clone(), value1).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[5].clone(), value2).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[6].clone(), value1).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[7].clone(), value1).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[8].clone(), value1).unwrap();
-    print_root(&tree, &storage);
-
-    tree.set(&storage, keys[9].clone(), value2).unwrap();
-    print_root(&tree, &storage);
-
-    // println!("{:?}", tree);
-    // dbg!(&tree);
-
-    // let (felt, root_idx) = commit_and_persist(tree.to_owned(), storage);
-    // pathfinder_merkle_tree::tree::MerkleTree::get_proof(
-    //     0,
-    //     &storage,
-    // )
-    // .unwrap();
+    fn root_hash(&mut self) -> Result<Value> {
+        self.commit()?.ok_or(anyhow::Error::msg("No root hash"))
+    }
 }
 
 fn main() {
-    // path_finder_minimal_test()
-    let mut tree = TestTree::empty();
-    let mut storage = TestStorage::default();
+    let result = init_runner(|| Box::new(TestEnvironment::new()));
 
-    let c_string = CString::new(
-        "/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/4.yml",
-    )
-    .expect("Failed to create CString");
-
-    // Leak the CString to ensure it lives long enough to be used from other
-    // languages
-    let scenario3 = c_string.into_raw();
-
-    // let scenario3 = "/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/3.yml";
-    let command_list = rust_ffi::load_scenario(scenario3);
-
-    run_pathfinder_test(&command_list, &mut tree, &mut storage);
+    log::info!("Pathfinder | Results {:?}", result);
 }
-

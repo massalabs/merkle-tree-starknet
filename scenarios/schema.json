@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "keyType": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "stringValue": {
+      "type": "string",
+      "pattern": "^(0x[0-9a-fA-F]+|\\d+)$"
+    }
+  },
+  "type": "array",
+  "items": {
+    "type": "object",
+    "oneOf": [
+      {
+        "required": ["insert"],
+        "properties": {
+          "insert": {
+            "type": "object",
+            "properties": {
+              "key": { "$ref": "#/definitions/keyType" },
+              "value": { "$ref": "#/definitions/stringValue" }
+            },
+            "required": ["key", "value"]
+          }
+        }
+      },
+      {
+        "required": ["check_root_hash"],
+        "properties": {
+          "check_root_hash": {
+            "type": "object",
+            "properties": {
+              "expected_value": { "$ref": "#/definitions/stringValue" }
+            },
+            "required": ["expected_value"]
+          }
+        }
+      },
+      {
+        "required": ["get"],
+        "properties": {
+          "get": {
+            "type": "object",
+            "properties": {
+              "key": { "$ref": "#/definitions/keyType" },
+              "expected_value": { "$ref": "#/definitions/stringValue" }
+            },
+            "required": ["key", "expected_value"]
+          }
+        }
+      },
+      {
+        "required": ["contains"],
+        "properties": {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "key": { "$ref": "#/definitions/keyType" },
+              "expected_value": {
+                "type": "boolean"
+              }
+            },
+            "required": ["key", "expected_value"]
+          }
+        }
+      },
+      {
+        "required": ["remove"],
+        "properties": {
+          "remove": {
+            "type": "object",
+            "properties": {
+              "key": { "$ref": "#/definitions/keyType" }
+            },
+            "required": ["key"]
+          }
+        }
+      }
+    ]
+  },
+  "if": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "array",
+        "items": { "const": 0 }
+      }
+    }
+  },
+  "then": { "not": { "required": ["key"] } }
+}

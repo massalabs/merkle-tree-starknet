@@ -1,60 +1,115 @@
+use anyhow::{anyhow, Result};
 use bonsai_trie::{
     databases::{create_rocks_db, RocksDB, RocksDBConfig},
+    id::{BasicId, BasicIdBuilder},
     BonsaiStorage, BonsaiStorageConfig,
 };
-use command_interpreter_bonsai::run_bonsai_test;
-use std::ffi::CString;
+use rocksdb::OptimisticTransactionDB;
+use rust_common::{
+    init_runner,
+    tree::{Key, TestTree, Value},
+};
+use starknet_types_core::{felt, hash::Pedersen};
 
-use bitvec::prelude::*;
-use starknet_types_core::hash::Pedersen;
-
-mod command_interpreter_bonsai;
-
-fn bonsai_main() {
-    let config = BonsaiStorageConfig::default();
-    let db1 = create_rocks_db("./rocksdb").unwrap();
-
-    // Create a BonsaiStorage with default parameters.
-    let database = RocksDB::new(&db1, RocksDBConfig::default());
-    let bonsai_storage: BonsaiStorage<_, _, Pedersen> =
-        BonsaiStorage::new(database, config.clone()).unwrap();
-
-    // let command_list = rust_ffi::get_test1();
-    // run_test(&command_list, bonsai_storage);
-    // rust_ffi::free_test(command_list);
-    // let c_string = CString::new("/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/2_crash_the_proof.yml").expect("Failed to create CString");
-    let c_string = CString::new(
-        "/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/1.yml",
-    )
-    .expect("Failed to create CString");
-
-    // Leak the CString to ensure it lives long enough to be used from other
-    // languages
-    let scenario3 = c_string.into_raw();
-
-    // let scenario3 = "/home/jf/workspace/rust/starknet/merkle-tree-starknet/scenario/3.yml";
-    let command_list = rust_ffi::load_scenario(scenario3);
-
-    // let command_list = rust_ffi::get_test3();
-    run_bonsai_test(&command_list, bonsai_storage);
-    rust_ffi::free_test(command_list);
-    // free leak of the file path
-    let _ = unsafe { CString::from_raw(scenario3) };
+struct TestEnvironment<'db> {
+    pub tree: BonsaiStorage<BasicId, RocksDB<'db, BasicId>, Pedersen>,
+    id_builder: BasicIdBuilder,
+    // seems to prevent a leak do not remove it
+    _storage: Box<OptimisticTransactionDB>,
 }
 
-/// Create a key of 251 bits from a u64
-fn make_key_251(val: u64) -> BitVec<u8, Msb0> {
-    //
-    let key: BitVec<u8, Msb0> = BitVec::from_vec(val.to_be_bytes().to_vec());
+impl<'db> TestEnvironment<'db> {
+    fn new() -> Self {
+        let storage = Box::new(create_rocks_db("./rocksdb").unwrap());
+        // leak the box so we can pass a ref to RockDB::new()
+        let storage_ptr: *const OptimisticTransactionDB =
+            Box::into_raw(storage);
+        let tree: BonsaiStorage<BasicId, RocksDB<'_, BasicId>, Pedersen> =
+            BonsaiStorage::new(
+                // safe because we have just created the storage above
+                unsafe {
+                    RocksDB::new(&*storage_ptr, RocksDBConfig::default())
+                },
+                BonsaiStorageConfig::default().clone(),
+            )
+            .unwrap();
 
-    let mut key251: BitVec<u8, Msb0> = bitvec![u8, Msb0; 0; 251];
-    key251.truncate(key251.len() - key.len());
+        TestEnvironment {
+            tree,
+            id_builder: BasicIdBuilder::new(),
+            // rebuild the box from the pointer, so it can be dropped and
+            // prevent a leak dropping the pointer manually would be prevent
+            // leak but causes a segfault when RosckDB is dropped "later"
+            // (maybe thread related because even if the tree is dropped
+            // before the pointer it still segfaults.
+            _storage: unsafe {
+                Box::from_raw(storage_ptr as *mut OptimisticTransactionDB)
+            },
+        }
+    }
 
-    key251.extend(key.iter());
-    println!("{:?}", &key251);
-    key251
+    fn id(&mut self) -> BasicId {
+        self.id_builder.new_id()
+    }
+}
+
+impl TestTree for TestEnvironment<'_> {
+    fn insert(&mut self, key: &Key, value: &Value) -> Result<()> {
+        let felt: [u8; 32] = value[..32]
+            .try_into()
+            .map_err(|_| anyhow!("Error converting value to [u8; 32]"))?;
+
+        let felt = felt::Felt::from_bytes_be(&felt);
+        self.tree.insert(key, &felt).map_err(|e| anyhow!(e))?;
+        self.commit()?;
+        Ok(())
+    }
+
+    fn remove(&mut self, key: &Key) -> Result<()> {
+        self.tree.remove(key).map_err(|e| anyhow!(e))?;
+        self.commit()?;
+        Ok(())
+    }
+
+    fn get(&self, key: &Key) -> Result<Value> {
+        Ok(self
+            .tree
+            .get(key)
+            .map_err(|e| anyhow!(e))
+            .and_then(|x| {
+                x.ok_or_else(|| {
+                    anyhow!(format!("key not found on get : {:?}", key))
+                })
+            })?
+            .to_bytes_be()
+            .to_vec())
+    }
+
+    fn contains(&self, key: &Key) -> Result<bool> {
+        self.tree
+            .get(key)
+            .map_err(|e| anyhow!(e))
+            .map(|x| x.is_some())
+    }
+
+    fn commit(&mut self) -> Result<Option<Vec<u8>>> {
+        let id = self.id();
+        self.tree.commit(id).map_err(|e| anyhow!(e))?;
+        Ok(None)
+    }
+
+    fn root_hash(&mut self) -> Result<Value> {
+        Ok(self
+            .tree
+            .root_hash()
+            .map_err(|e| anyhow!(e))?
+            .to_bytes_be()
+            .to_vec())
+    }
 }
 
 fn main() {
-    bonsai_main();
+    let result = init_runner(|| Box::new(TestEnvironment::new()));
+
+    log::info!("Bonsai | Results {:?}", result);
 }

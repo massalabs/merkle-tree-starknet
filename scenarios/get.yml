@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./schema.json
+
+# test get
+
+- insert:
+    key: [1]
+    value: "0x8"
+
+- insert:
+    key: [3]
+    value: "0x9"
+
+- check_root_hash:
+    expected_value: "0x4af93cb48abc063eccc93fed3312d0c3d9c3582f342173a069669e0221c9bba"
+
+- get:
+    key: [1]
+    expected_value: "0x8"
+
+- get:
+    key: [3]
+    expected_value: "0x9"
+
+  # - action: get
+  #   key: [2]
+  #   value: "0x0" # in ref implementation 0 is empty value so this test succeeds
+
+- contains:
+    key: [1]
+    expected_value: True
+
+- contains:
+    key: [2]
+    expected_value: False

@@ -6,11 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bonsai-trie = { git = "https://github.com/keep-starknet-strange/bonsai-trie" }
-rust_ffi = { path = "../rust_ffi" }
 starknet-types-core = "0.0.7"
 log = "0.4.14"
-
+env_logger = "0.11.2"
 pathfinder-merkle-tree = { path = "pathfinder/crates/merkle-tree/" }
 pathfinder-common = { path = "pathfinder/crates/common" }
 pathfinder-crypto = { path = "pathfinder/crates/crypto" }
@@ -24,3 +22,4 @@ mp-felt = { git = "https://github.com/keep-starknet-strange/madara.git", rev = "
 bitvec = "1.0.1"
 serde_json = "1.0.113"
 serde = "1.0.196"
+rust_common = { version = "0.1.0", path = "../rust_common" }

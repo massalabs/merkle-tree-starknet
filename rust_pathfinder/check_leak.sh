@@ -1,1 +1,1 @@
-cargo build && valgrind --leak-check=full --show-leak-kinds=all ./target/debug/runner
+cargo build && valgrind --leak-check=full --show-leak-kinds=all ./runner

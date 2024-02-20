@@ -1,6 +1,7 @@
 **/target
 **/rocksdb*
-zig/zig-cache
+**/zig-cache
+**/zig-out
 c/main.dSYM
 result.txt
 main
@@ -13,3 +14,11 @@ venv/
 cairo-lang/
 __pycache__/
 .asciidoctor/
+**.so
+**.o
+**.d
+compile_commands.json
+.cache
+
+rust_pathfinder/pathfinder/
+*.egg-info

@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=./schema.json
+
+# test remove
+
+- insert:
+    key: [1]
+    value: "0x1"
+
+- insert:
+    key: [2]
+    value: "0x1"
+
+- check_root_hash:
+    expected_value: "0x2e7fce0ca3e8cb3b7bf04cbf9d1a187f6103bf53851dc5f59d5aabe8a3207f5"
+
+- get:
+    key: [1]
+    expected_value: "0x1"
+
+- contains:
+    key: [1]
+    expected_value: true
+
+- insert:
+    key: [3]
+    value: "0x1"
+
+- check_root_hash:
+    expected_value: "0x44e22ca6e595af1985d50ca8b4de7a485b9e86de57e878a8f7411314953fc4e"
+
+- contains:
+    key: [1]
+    expected_value: true
+
+- remove:
+    key: [1]
+
+- contains:
+    key: [1]
+    expected_value: false
+
+- check_root_hash:
+    expected_value: "0x5f5d14d8c979e5172976a42dbaaa10b4ab1223d64477311fe2aaefc7d881a68"

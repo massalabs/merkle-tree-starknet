@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=./schema.json
+
+- insert:
+    key: [1]
+    value: "0x1"

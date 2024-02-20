@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=./schema.json
+
+# verify the proof from https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#merkle_patricia_trie
+# leaves values (0,0,1,0,0,1,0,0)
+
+- insert:
+    key: [1]
+    value: "0x1"
+- insert:
+    key: [2]
+    value: "0x2"
+- insert:
+    key: [3]
+    value: "0x3"
+- insert:
+    key: [4]
+    value: "0x4"
+- insert:
+    key: [5]
+    value: "0x5"
+- insert:
+    key: [6]
+    value: "0x6"
+- insert:
+    key: [7]
+    value: "0x7"
+- insert:
+    key: [8]
+    value: "0x8"
+- check_root_hash:
+    expected_value: "0x3cf02023907fa1df09a91b588e75136087d41d013363b9a5db794b56d7c929d"
+
+- get:
+    key: [3]
+    expected_value: "0x3"
+- get:
+    key: [7]
+    expected_value: "0x7"
